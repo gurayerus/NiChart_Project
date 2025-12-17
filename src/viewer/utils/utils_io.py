@@ -1007,7 +1007,7 @@ def panel_ask_harmonize():
                     """)
         
         harmonize = st.checkbox("Harmonize to reference data? (Requires >= 30 scans)")
-        st.session_state.do_harmonize = harmonize
+        st.session_state.user_sel[flag_harmonize] = harmonize
 
 def panel_guided_upload_data():
     # That's right, emojis in the code. >:^)
@@ -1024,7 +1024,7 @@ def panel_guided_upload_data():
     else:
         st.info(f"Pipeline {pipeline} was selected, so we'll guide you through the required inputs.")
 
-    pipeline_id = utiltl.get_pipeline_id_by_label(pipeline, harmonized=st.session_state.do_harmonize)
+    pipeline_id = utiltl.get_pipeline_id_by_label(pipeline, harmonized=st.session_state.user_sel[flag_harmonize])
     reqs_set, reqs_params, req_order = utiltl.parse_pipeline_requirements(pipeline_id)
 
     # need to generate counts

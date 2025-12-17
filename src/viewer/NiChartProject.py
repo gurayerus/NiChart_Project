@@ -53,7 +53,7 @@ pages = {
     "Home": [
         st.Page("pages/nichart_home.py", title="Home"),
         st.Page("pages/nichart_info.py", title="Info"),
-        st.Page("pages/survey.py", title="Take Survey"),
+        st.Page("pages/nichart_survey.py", title="Take Survey"),
     ],
     "Workflows": [
         st.Page("pages/nichart_single_subject.py", title="Single Subject"),
@@ -65,10 +65,6 @@ pages = {
         st.Page("pages/nichart_pipelines.py", title="Pipelines"),
         st.Page("pages/nichart_results.py", title="Results"),
     ],
-    #"Pipelines": [
-        #st.Page("pages/sel_pipelines.py", title="Select Pipelines"),
-        #st.Page("pages/run_pipelines.py", title="Run Pipelines"),
-    #],
 }
 
 pg = st.navigation(pages, position="top")

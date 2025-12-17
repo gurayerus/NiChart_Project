@@ -2,33 +2,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from PIL import Image
 
-###################################
-# Hard-coded menu items for NiChart
-dict_menu = {
-    "Home": "pages/home.py",
-    "Explore NiChart": "pages/explore_nichart.py",
-    "Select Pipeline": "pages/sel_pipelines.py",
-    "Select Project": "pages/upload_data.py",
-    "Run Pipeline": "pages/run_pipelines.py",
-    "View Your Brain Chart": "pages/view_results.py",
-    "Download Results": "pages/download_results.py",
-    "Settings": "pages/settings.py",
-}
-
-dict_workflow = {
-}
-
 def set_global_style():
-    #st.markdown("""
-        #<style>
-        #body, html, .stMarkdown, .stText, .stTextInput > label {
-            #font-size: 18px !important;
-        #}
-        #h1, h2, h3 {
-            #font-size: 28px;
-        #}
-        #</style>
-    #""", unsafe_allow_html=True)
     st.markdown(
         """
         <style>
@@ -40,32 +14,6 @@ def set_global_style():
         unsafe_allow_html=True
     )
 
-def show_menu() -> None:
-    with st.sidebar:
-        list_options = list(dict_menu.keys())
-        if 'sel_menu' not in st.session_state:
-            st.session_state.sel_menu = list_options[0]
-            sel_ind = 0
-        else:
-            sel_ind = list_options.index(st.session_state.sel_menu)
-        sel_menu = option_menu(
-            'NiChart',
-            list_options,
-            icons=['house', 'map', 'check2-square', 'upload', 'rocket-takeoff', 'graph-up', 'download', 'sliders'],
-            menu_icon='cast',
-            default_index=sel_ind
-        )
-
-        if sel_menu is None:
-            return
-        
-        if sel_menu == st.session_state.sel_menu:
-            return
-        
-        sel_page = dict_menu[sel_menu]
-        st.session_state.sel_menu = sel_menu
-        st.switch_page(sel_page)
-        
 def config_page() -> None:
     nicon = Image.open("../resources/nichart1.png")
     st.set_page_config(

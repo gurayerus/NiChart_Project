@@ -54,7 +54,7 @@ if sel_opt == '':
     st.switch_page("pages/nichart_results.py")
 
 # Show session state vars
-if st.session_state.mode == 'debug':
+if st.session_state.system_vars['mode'] == 'debug':
     utilses.disp_session_state()
 
 

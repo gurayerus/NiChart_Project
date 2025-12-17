@@ -4,7 +4,6 @@ import utils.utils_session as utilss
 import utils.utils_data_view as utildv
 import utils.utils_io as utilio
 import utils.utils_mriview as utilmri
-from utils.utils_upload_single_subject import upload_file
 
 import os
 import pandas as pd
@@ -73,9 +72,9 @@ def edit_participants(in_file):
             st.rerun()
 
 def update_participant_csv():
-    mrid = st.session_state.participant['mrid']
-    age = st.session_state.participant['age']
-    sex = st.session_state.participant['sex']
+    mrid = st.session_state.user_sel['mrid']
+    age = st.session_state.user_sel['age']
+    sex = st.session_state.user_sel['sex']
     df = pd.DataFrame(
         {'MRID':[mrid], 'Age':[age], 'Sex':[sex]}
     )
@@ -128,7 +127,7 @@ def consolidate_nifti():
     
     # Get full name for the current file
     # Input image file is kept in a temporary upload folder
-    in_fname = st.session_state.curr_scan
+    in_fname = st.session_state.user_sel['curr_scan']
     if in_fname is None:
         return False
     in_dir = os.path.join(st.session_state.paths['prj_dir'], 'user_upload')
@@ -137,13 +136,13 @@ def consolidate_nifti():
     logger.debug(f'      Input: {in_fpath}')
 
     # Get saved scan/participant info 
-    mrid = st.session_state.participant['mrid']
-    sex = st.session_state.participant['sex']
+    mrid = st.session_state.user_sel['mrid']
+    sex = st.session_state.user_sel['sex']
     if sex is None:
         ind_sex = None
     else:
         ind_sex = ['M', 'F', 'Other'].index(sex)
-    age = st.session_state.participant['age']
+    age = st.session_state.user_sel['age']
 
     # Update values based on user iput
     with st.form(key='_form_scan_info'):
@@ -159,7 +158,10 @@ def consolidate_nifti():
         
     if flag_submit:
         # Update participant info
-        st.session_state.participant = {'mrid': mrid, 'age': age, 'sex': sex}
+        st.session_state.user_sel['mrid'] = mrid
+        st.session_state.user_sel['age'] = age
+        st.session_state.user_sel['sex'] = sex
+
         update_participant_csv()
         st.success('Updated participant info!')
 
@@ -180,12 +182,12 @@ def consolidate_nifti():
 def dialog_consolidate_nifti():
     logger.debug('    Function: dialog_consolidate_nifti')
     # Detect mrid
-    mrid = st.session_state.participant['mrid']
+    mrid = st.session_state.user_sel['mrid']
     if mrid is None:
-        mrid = st.session_state.curr_scan
+        mrid = st.session_state.user_sel['curr_scan']
         for suffix in ['.nii.gz', '.nii', '_T1', '_t1', '_FL', '_fl']:
             mrid = mrid.replace(suffix, '')
-        st.session_state.participant['mrid'] = mrid
+        st.session_state.user_sel['mrid'] = mrid
     
     if consolidate_nifti():
         st.toast(f'Nifti file consolidated ...')
@@ -285,7 +287,7 @@ def dialog_extract_dicoms(in_dir, out_dir):
             st.warning(e)
             time.sleep(3)
 
-        st.session_state.curr_scan = st.session_state.participant['mrid'] + '.nii.gz'
+        st.session_state.user_sel['curr_scan'] = st.session_state.user_sel['mrid'] + '.nii.gz'
         utilss.reset_dicoms()
     
     if consolidate_nifti():
@@ -313,7 +315,7 @@ def upload_file_single_subject(in_file):
     st.toast(f'Uploaded file ...')
 
     if fname.endswith(('.nii.gz', '.nii')):
-        st.session_state.curr_scan = fname
+        st.session_state.user_sel['curr_scan'] = fname
         dialog_consolidate_nifti()
         
     elif fname.endswith('.csv'):
@@ -449,7 +451,7 @@ def panel_project_folder():
         st.markdown("##### Project Folder: ", width='content')
 
     placeholder = st.empty()
-    placeholder.markdown(f"##### 📁 `{st.session_state.prj_name}`", width='content')
+    placeholder.markdown(f"##### 📁 `{st.session_state.user_sel['prj_name']}`", width='content')
 
     sel_opt = st.selectbox(
         'Select an action',
@@ -472,12 +474,12 @@ def panel_project_folder():
         with st.container(horizontal=True, horizontal_alignment="center"):
             if st.button("Select"):
                 utilss.update_project(sel_prj)
-                placeholder.markdown(f"##### 📃 `{st.session_state.prj_name}`", width='content')
+                placeholder.markdown(f"##### 📃 `{st.session_state.user_sel['prj_name']}`", width='content')
 
     if sel_opt == 'Switch to existing project':
         list_projects = utilio.get_subfolders(st.session_state.paths['out_dir'])
         if len(list_projects) > 0:
-            sel_ind = list_projects.index(st.session_state.prj_name)
+            sel_ind = list_projects.index(st.session_state.user_sel['prj_name'])
             sel_prj = sac.chip(
                 list_projects,
                 label='', index=None, align='left', size='sm', radius='sm',
@@ -486,10 +488,10 @@ def panel_project_folder():
             
             with st.container(horizontal=True, horizontal_alignment="center"):
                 utilss.update_project(sel_prj)
-                placeholder.markdown(f"##### 📃 `{st.session_state.prj_name}`", width='content')
+                placeholder.markdown(f"##### 📃 `{st.session_state.user_sel['prj_name']}`", width='content')
                 if sel_prj is not None:
                     utilss.update_project(sel_prj)
-                    placeholder.markdown(f"##### 📃 `{st.session_state.prj_name}`", width='content')
+                    placeholder.markdown(f"##### 📃 `{st.session_state.user_sel['prj_name']}`", width='content')
     
     if sel_opt == 'Reset project folder':
         st.warning("⚠️Are you sure you want to delete all files in the project folder? This cannot be undone.")
@@ -498,8 +500,8 @@ def panel_project_folder():
         with st.container(horizontal=True, horizontal_alignment="center"):
             if st.button("Delete") and flag_confirm:
                 utilio.clear_folder(st.session_state.paths['prj_dir'])
-                st.toast(f"Files in project {st.session_state.prj_name} have been successfully deleted.")
-                utilss.update_project(st.session_state.prj_name)
+                st.toast(f"Files in project {st.session_state.user_sel['prj_name']} have been successfully deleted.")
+                utilss.update_project(st.session_state.user_sel['prj_name'])
         
 def panel_upload_single_subject():
     '''
@@ -723,7 +725,7 @@ def panel_view_files():
         st.markdown("##### Review File(s): ", width='content')
             
     placeholder = st.empty()
-    placeholder.markdown(f"##### 📁 `{st.session_state.prj_name}`", width='content')
+    placeholder.markdown(f"##### 📁 `{st.session_state.user_sel['prj_name']}`", width='content')
 
     with st.container(border = None, height = 400):
         tree_items, list_paths = utildv.build_folder_tree(

@@ -11,7 +11,7 @@ import utils.utils_session as utilses
 import utils.utils_io as utilio
 import utils.utils_data_view as utildv
 from utils.utils_styles import inject_global_css 
-import gui.utils_navig as utilnav
+import utils.utils_navig as utilnav
 
 from streamlit_image_select import image_select
 import re
@@ -61,7 +61,7 @@ with cols[1]:
 utilnav.main_navig(None, None, 'Data', 'pages/nichart_data.py')
 
 # Show session state vars
-if st.session_state.mode == 'debug':
+if st.session_state.system_vars['mode'] == 'debug':
     utilses.disp_session_state()
 
 

@@ -12,7 +12,7 @@ import utils.utils_upload as utilup
 import utils.utils_data_view as utildv
 import utils.utils_settings as utilset
 
-import gui.utils_navig as utilnav
+import utils.utils_navig as utilnav
 from utils.utils_styles import inject_global_css
 
 from streamlit_image_select import image_select
@@ -174,7 +174,7 @@ else:
     )
 
 # Show session state vars
-if st.session_state.mode == 'debug':
+if st.session_state.system_vars['mode'] == 'debug':
     utilses.disp_session_state()
 
 

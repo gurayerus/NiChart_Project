@@ -7,11 +7,6 @@ import numpy as np
 import streamlit as st
 import utils.utils_session as utilses
 import utils.utils_misc as utilmisc
-import utils.utils_mriview as utilmri
-
-import plotly.graph_objs as go
-import plotly.figure_factory as ff
-import utils.utils_traces as utiltr
 
 import streamlit_antd_components as sac
 

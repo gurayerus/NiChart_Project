@@ -678,7 +678,7 @@ def check_requirements_met_panel(pipeline_name):
         'needs_demographics': 'Participants CSV', 
     }
     pipeline = st.session_state.sel_pipeline
-    pipeline_id = get_pipeline_id_by_label(pipeline, harmonized=st.session_state.do_harmonize)
+    pipeline_id = get_pipeline_id_by_label(pipeline, harmonized=st.session_state.user_sel[flag_harmonize])
     reqs_set, reqs_params, req_order = parse_pipeline_requirements(pipeline_id)
 
     # need to generate counts

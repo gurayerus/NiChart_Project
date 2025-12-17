@@ -56,7 +56,7 @@ def survey_panel():
                 If you choose to provide this information, it will be stored by the University of Pennsylvania and accessed only for the purposes of reporting to the NIH for grant U24NS130411. All such data will be deleted upon completion of the grant period.
                 If at any time you wish to view or revoke our access to the information you have provided, please contact us at software@cbica.upenn.edu and we'll be happy to help.
                 ''')
-    if st.session_state.has_cloud_session:
+    if st.session_state.cloud_vars['has_cloud_session']:
         st.markdown("Once you submit this form, you will gain **permanent, free** access to use the NiChart Cloud service and we won't ask you for this information again.")
     else: # Local
         st.markdown('''
