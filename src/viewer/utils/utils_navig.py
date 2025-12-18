@@ -19,12 +19,13 @@ import streamlit_antd_components as sac
 
 import streamlit as st
 from stqdm import stqdm
+from typing import Optional
 
 from utils.utils_logger import setup_logger
 logger = setup_logger()
 
 @st.dialog("Help Information", width="medium")
-def my_help():
+def my_help() -> None:
     st.write(
         """
         **Project Folder Help**
@@ -39,21 +40,21 @@ def my_help():
     )
 
 def main_navig(
-    txt_back = None,
-    page_back = None,
-    txt_fwd = None,
-    page_fwd = None,
-    func_settings = None,
-    func_help = None
-):
+    txt_back: Optional[str] = None,
+    page_back: Optional[str] = None,
+    txt_fwd: Optional[str] = None,
+    page_fwd: Optional[str] = None,
+    func_settings: Optional[Any] = None,
+    func_help: Optional[Any] = None
+) -> None:
     sac.divider()
 
     with st.container(horizontal=True, horizontal_alignment="center"):
-        if txt_back is not None:
+        if page_back is not None:
             if st.button('', icon=':material/arrow_back:', help = txt_back):
                 st.switch_page(page_back)
 
-        if txt_fwd is not None:
+        if page_fwd is not None:
             if st.button('', icon=':material/arrow_forward:', help = txt_fwd):
                 st.switch_page(page_fwd)
 

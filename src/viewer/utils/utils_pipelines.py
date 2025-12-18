@@ -1,7 +1,7 @@
 import os
 import shutil
 import time
-from typing import Any
+from typing import Any, Optional, List
 
 import pandas as pd
 import numpy as np
@@ -30,47 +30,27 @@ logger = setup_logger()
 
 #################################
 ## Function definitions
-def show_description(pipeline) -> None:
-    """
-    Panel for viewing pipeline description
-    """
-    with st.container(border=True):
-        f_logo = os.path.join(
-            st.session_state.paths['resources'], 'pipelines', pipeline, f'logo_{pipeline}.png'
-        )
-        fdoc = os.path.join(
-            st.session_state.paths['resources'], 'pipelines', pipeline, f'overview_{pipeline}.md'
-        )
-        cols = st.columns([6, 1])
-        with cols[0]:
-            with open(fdoc, 'r') as f:
-                st.markdown(f.read())
-        with cols[1]:
-            st.image(f_logo)
 
-def select_pipeline():
-    '''
-    Select a pipeline and show overview
-    '''
-    st.markdown("##### Select:")
+# FIXME: function was defined twice
+#def show_description(pipeline: str) -> None:
+    #"""
+    #Panel for viewing pipeline description
+    #"""
+    #with st.container(border=True):
+        #f_logo = os.path.join(
+            #st.session_state.paths['resources'], 'pipelines', pipeline, f'logo_{pipeline}.png'
+        #)
+        #fdoc = os.path.join(
+            #st.session_state.paths['resources'], 'pipelines', pipeline, f'overview_{pipeline}.md'
+        #)
+        #cols = st.columns([6, 1])
+        #with cols[0]:
+            #with open(fdoc, 'r') as f:
+                #st.markdown(f.read())
+        #with cols[1]:
+            #st.image(f_logo)
 
-    sac.divider(key='_p2_div1')
-
-    pipelines = st.session_state.pipelines
-    pnames = pipelines.Name.tolist()
-
-    sel_opt = sac.chip(
-        pnames,
-        label='', index=0, align='left',
-        size='md', radius='md', multiple=False, color='cyan',
-        description='Select a pipeline'
-    )
-
-    st.session_state.sel_pipeline = sel_opt
-
-    show_description(sel_opt.lower())
-
-def show_description(pipeline) -> None:
+def show_description(pipeline: str) -> None:
     """
     Panel for viewing pipeline description
     """
@@ -95,7 +75,30 @@ def show_description(pipeline) -> None:
         with cols[1]:
             st.image(f_logo)
 
-def select_pipeline(enabled_pnames):
+# FIXME: function was defined twice
+#def select_pipeline() -> None:
+    #'''
+    #Select a pipeline and show overviewOptional
+    #'''
+    #st.markdown("##### Select:")
+
+    #sac.divider(key='_p2_div1')
+
+    #pipelines = st.session_state.pipelines
+    #pnames = pipelines.Name.tolist()
+
+    #sel_opt = sac.chip(
+        #pnames,
+        #label='', index=0, align='left',
+        #size='md', radius='md', multiple=False, color='cyan',
+        #description='Select a pipeline'
+    #)
+
+    #st.session_state.sel_pipeline = sel_opt
+
+    #show_description(sel_opt.lower())
+
+def select_pipeline(enabled_pnames: List) -> Optional[str]:
     '''
     Select a pipeline and show overview
     '''
@@ -110,7 +113,7 @@ def select_pipeline(enabled_pnames):
     if show_enabled_only:
         if not enabled_pnames:
             st.error(f"It looks like your data doesn't meet the requirements for any pipelines. Please browse the pipeline listing using the checkbox above, then go back and upload some data!")
-            return
+            return None
         sel_opt = sac.chip(
             enabled_pnames,
             label='', index=0, align='left',
@@ -136,7 +139,7 @@ def select_pipeline(enabled_pnames):
 
     return sel_label
 
-def pipeline_runner_menu(enabled_pnames, sel=False):
+def pipeline_runner_menu(enabled_pnames: List, sel: Optional[str] = None) -> None:
     st.markdown("##### Run:")
     sac.divider(key='_p2_div2')
     if not sel:
@@ -149,7 +152,7 @@ def pipeline_runner_menu(enabled_pnames, sel=False):
     if 'subject_type' not in st.session_state or st.session_state.subject_type == 'multi':
         if utiltl.pipeline_is_harmonizable(sel_method):
             harmonize = st.checkbox("Harmonize to reference data? (Requires >= 30 scans)")
-    st.session_state.user_sel[flag_harmonize] = harmonize
+    st.session_state.user_sel['flag_harmonize'] = harmonize
     ## TODO: Retrieve dynamically/match between front end and toolloader code
     ## This a nice and simple placeholder for now
     if sel_name not in enabled_pnames:
@@ -242,7 +245,7 @@ def pipeline_runner_menu(enabled_pnames, sel=False):
 
     pass
 
-def pipeline_menu():
+def pipeline_menu() -> None:
     #cols = st.columns([10,1,10])
     cols = st.columns(2)
     out_dir = os.path.join(
@@ -258,7 +261,7 @@ def pipeline_menu():
     for pname in pnames:
         if not utiltl.pipeline_is_enabled_by_name(pname):
             continue # Skip pipelines which are not enabled in frontend ("True") (list_pipelines.csv)
-        result, blockers = utiltl.check_requirements_met_nopanel(pname, st.session_state.user_sel[flag_harmonize])
+        result, blockers = utiltl.check_requirements_met_nopanel(pname, st.session_state.user_sel['flag_harmonize'])
         if result:
             enabled_pnames.append(pname)
         else:
@@ -270,7 +273,7 @@ def pipeline_menu():
         pipeline_runner_menu(enabled_pnames=enabled_pnames, sel=sel)
 
 
-def panel_pipelines():
+def panel_pipelines() -> None:
 
     workflow = st.session_state.workflow
 

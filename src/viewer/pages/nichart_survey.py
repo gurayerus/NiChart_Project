@@ -9,6 +9,9 @@ import time
 import re
 import requests
 import os
+import streamlit.delta_generator as dg
+from typing import Any
+
 
 # Page config should be called for each page
 utilpg.config_page()
@@ -16,25 +19,25 @@ utilpg.config_page()
 #utilpg.add_sidebar_options()
 utilpg.set_global_style()
 
-def create_survey_indicator():
+def create_survey_indicator()->None:
     user_dir = st.session_state.paths['out_dir']
     indicator_filepath = os.path.join(user_dir, "survey.txt")
     with open(indicator_filepath, 'w') as f:
         pass
 
-def delete_survey_indicator():
+def delete_survey_indicator()->None:
     user_dir = st.session_state.paths['out_dir']
     indicator_filepath = os.path.join(user_dir, "survey.txt")
     if os.path.exists(indicator_filepath):
         os.remove(indicator_filepath)
 
-def clear(box):
+def clear(box: Any)->Any:
     return lambda: box.empty()
 
-def dummy_submit_form(form_data):
+def dummy_submit_form(form_data:dict)->None:
     time.sleep(2)
 
-def submit_form(form_data):
+def submit_form(form_data:dict)->bool:
     SUBMIT_URL = "https://7crcypuj62xqnrnmkyzaelx7ci0qrcrl.lambda-url.us-east-1.on.aws/"
     try:
         r = requests.post(SUBMIT_URL, json=form_data, timeout=5)
@@ -44,8 +47,9 @@ def submit_form(form_data):
     except Exception as e:
         st.error(f"Request failed: {e}")
         return False
+    return False
 
-def survey_panel():
+def survey_panel()->None:
     st.markdown('# NiChart User Demographics Survey')
     st.markdown('''
                 NiChart is free software and a free service supported by grants that require us to ask users for demographic and institutional information.
@@ -77,13 +81,15 @@ def survey_panel():
 
     countries = ['', "Prefer not to answer"] + sorted([country.name for country in pycountry.countries])
     country_errbox = st.empty()
-    selected_country = st.selectbox("Select a Country", countries, key='country_select', on_change=clear(country_errbox))
+    selected_country = st.selectbox(
+        "Select a Country", countries, key='country_select', on_change=clear(country_errbox)
+        )
     if selected_country != st.session_state.selected_country:
         st.session_state.selected_country = selected_country
 
     province_errbox = st.empty()
     selected_province = 'NO PROVINCE' # Default to no province
-    if selected_country and selected_country != "Prefer not to answer":
+    if selected_country != "Prefer not to answer":
         selected_country_obj = pycountry.countries.get(name=selected_country)
         country_code = selected_country_obj.alpha_2
         subdivisions = list(pycountry.subdivisions.get(country_code=country_code))

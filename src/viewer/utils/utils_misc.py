@@ -1,5 +1,5 @@
 import os
-from typing import Any, Optional
+from typing import Any, Optional, List
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -7,7 +7,7 @@ import streamlit as st
 ###################################################################
 # Misc utils
 
-def styled_text(text):
+def styled_text(text: str) -> str:
     return f'<span style="color:teal; font-weight:600; background-color: #f5f5fa; padding: 4px 4px; border-radius: 3px;">{text}</span>'
 
 
@@ -51,7 +51,8 @@ def get_index_in_list(in_list: list, in_item: str) -> Optional[int]:
     else:
         return list(in_list).index(in_item)
     
-def get_roi_indices(sel_roi, atlas):
+## FIXME : mypy complained to Optional[List] for return type, check why!
+def get_roi_indices(sel_roi: Optional[str], atlas: Optional[str])-> Optional[Any]:
     '''
     Detect indices for a selected ROI
     '''

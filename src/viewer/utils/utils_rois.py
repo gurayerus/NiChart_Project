@@ -3,12 +3,14 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 import os
+from typing import Any, Optional
+
 
 # from stqdm import stqdm
 
 
-@st.cache_data  # type:ignore
-def get_list_rois(sel_var: str, roi_dict: dict, derived_dict: dict) -> Any:
+@st.cache_data
+def get_list_rois(sel_var: Optional[Any ], roi_dict: dict, derived_dict: dict) -> Any:
     """
     Get a list of ROI indices for the selected var
     """
@@ -33,7 +35,7 @@ def get_list_rois(sel_var: str, roi_dict: dict, derived_dict: dict) -> Any:
     return list_rois
 
 
-@st.cache_data  # type:ignore
+@st.cache_data
 def get_roi_names(csv_rois: str) -> Any:
     """
     Get a list of ROI names
@@ -43,7 +45,7 @@ def get_roi_names(csv_rois: str) -> Any:
     return df.Name.tolist()
 
 
-def muse_derived_to_dict(in_list: list) -> Any:
+def muse_derived_to_dict(in_list: str) -> Any:
     """
     Create a dictionary from derived roi list
     """
@@ -121,7 +123,7 @@ def muse_get_derived(sel_roi: str, in_list: list) -> Any:
 
     return sel_vals
 
-def read_muse_dicts():
+def read_muse_dicts() -> Any:
     '''
     Function to read muse dictionaries and save in session state
     '''
@@ -151,9 +153,10 @@ def read_muse_dicts():
     return out_dicts
 
 
-    muse['dict_roi'] = dict1
-    muse['dict_roi_inv'] = dict2
-    muse['dict_derived'] = dict3
-    muse['df_derived'] = df_derived
-    muse['df_groups'] = df_groups
+    ## FIXME
+    #muse['dict_roi'] = dict1
+    #muse['dict_roi_inv'] = dict2
+    #muse['dict_derived'] = dict3
+    #muse['df_derived'] = df_derived
+    #muse['df_groups'] = df_groups
 

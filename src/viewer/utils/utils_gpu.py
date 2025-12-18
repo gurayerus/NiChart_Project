@@ -1,7 +1,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Union, Any, List, Tuple, Optional, cast
 
 import streamlit as st
 import platform
@@ -21,7 +21,7 @@ def _parse_nvidia_smi() -> List[Dict[str, Any]]:
     """
     Use nvidia-smi to get per-GPU info. Returns empty list if not available.
     """
-    base = []
+    base: List[Dict[str, Any]] = []
     if shutil.which("nvidia-smi") is None:
         return base
 
@@ -54,7 +54,7 @@ def _parse_nvidia_smi() -> List[Dict[str, Any]]:
 
     for line in out.splitlines():
         parts = [p.strip() for p in line.split(",")]
-        rec = { "vendor": "NVIDIA" }
+        rec: Dict[str, Any] = { "vendor": "NVIDIA" }
         for key, val in zip(fields, parts):
             k = key.replace(".", "_")
             rec[k] = val
@@ -118,7 +118,7 @@ def _rocm_info() -> List[Dict[str, Any]]:
     """
     Try rocm-smi for AMD GPUs. Returns per-GPU dicts if available.
     """
-    out = []
+    out: List[Dict[str, Any]] = []
     if shutil.which("rocm-smi") is None:
         return out
 
@@ -198,7 +198,7 @@ def _torch_info() -> Dict[str, Any]:
     """
     Summarize PyTorch backends (CUDA & Apple Metal MPS).
     """
-    info = {
+    info: Dict[str, Any] = {
         "torch_available": False,
         "torch_version": None,
         "cuda_available": False,
@@ -301,7 +301,7 @@ def get_gpu_inventory() -> Dict[str, Any]:
             })
 
     # Merge/augment with NVML and nvidia-smi if available
-    def _merge(devs: List[Dict[str, Any]]):
+    def _merge(devs: List[Dict[str, Any]]) -> None:
         # try to align by bus_id or name
         for nd in devs:
             matched = None
@@ -345,7 +345,8 @@ def load_saved_selection(settings_dir: Path) -> Dict[str, Any]:
     p = _settings_path(settings_dir)
     if p.exists():
         try:
-            return json.loads(p.read_text())
+            return cast(Dict[str, Any], json.loads(p.read_text()))            
+            #return json.loads(p.read_text())
         except Exception:
             pass
     return {}
@@ -371,34 +372,44 @@ def choose_device_for_user(
     if not devs:
         return {}
 
-    def norm(s): return (s or "").lower()
+    def norm(s: str) -> str: return (s or "").lower()
 
     if not selector or selector == "auto":
         nvidia = [d for d in devs if norm(d.get("vendor")) == "nvidia"]
         if nvidia:
-            return nvidia[0]
+            return cast(Dict[str, Any], nvidia[0])
+            #return nvidia[0]
+        
         amd = [d for d in devs if norm(d.get("vendor")) == "amd"]
-        return amd[0] if amd else devs[0]
+        if amd:
+            return cast(Dict[str, Any], amd[0])
+        else:
+            return cast(Dict[str, Any], devs[0])
+        #return amd[0] if amd else devs[0]
 
     if selector.startswith("idx:"):
         want = selector.split(":", 1)[1]
         for d in devs:
             if str(d.get("index")) == want:
-                return d
+                #return d
+                return cast(Dict[str, Any], d)            
 
     if selector.startswith("uuid:"):
         want = selector.split(":", 1)[1]
         for d in devs:
             if d.get("uuid") == want:
-                return d
+                #return d
+                return cast(Dict[str, Any], d)
 
     if selector.startswith("name:"):
         want = norm(selector.split(":", 1)[1])
         for d in devs:
             if want in norm(d.get("name")):
-                return d
+                #return d
+                return cast(Dict[str, Any], d)
 
-    return devs[0]
+    #return devs[0]
+    return cast(Dict[str, Any], devs[0])
 
 
 def build_container_gpu_selection(
@@ -627,5 +638,5 @@ def load_container_selection(
     return extra_args, extra_env, chosen
 
 
-def panel_select_gpu():
+def panel_select_gpu() -> None:
     render(st.session_state.paths['out_dir'])

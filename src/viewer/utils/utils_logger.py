@@ -1,6 +1,7 @@
 import logging
+from Typing import Any
 
-def setup_logger(name="streamlit_app"):
+def setup_logger(name: str="streamlit_app") -> Any:
     logger = logging.getLogger(name)
     if not logger.handlers:
         # Prevent duplicate handlers

@@ -10,13 +10,13 @@ import utils.utils_misc as utilmisc
 
 import streamlit_antd_components as sac
 
-def safe_index(lst, value, default=None):
+def safe_index(lst: list, value: Any, default: Optional[int]=None) -> Any:
     try:
         return lst.index(value)
     except ValueError:
         return default
 
-def select_from_list(list_opts, var_name, hdr):
+def select_from_list(list_opts: Any, var_name: Any  , hdr: str) -> Any:
     '''
     Generic selection box 
     For a variable (var_name) initiated with the given list (list_opts)
@@ -27,11 +27,11 @@ def select_from_list(list_opts, var_name, hdr):
     return st.session_state[var_name]
 
 def select_var_from_group(
-    df_vars,
-    list_vars,
-    flag_add_none = False,
-    dicts_rename = None,
-):
+    df_vars: pd.DataFrame,
+    list_vars: list,
+    flag_add_none: bool = False,
+    dicts_rename: Optional[dict] = None,
+) -> Any:
     '''
     Panel for user to select a variable grouped in categories
     Variable groups are given in df_vars
@@ -50,7 +50,7 @@ def select_var_from_group(
         #st.write(f'A3: {tmp_atlas}')
 
         # Convert ROI variables from index to name
-        if tmp_atlas is not None:
+        if tmp_atlas is not None and dicts_rename is not None:
             tmp_list = [dicts_rename[tmp_atlas][k] for k in tmp_list]
 
         # Select vars that are included in the data

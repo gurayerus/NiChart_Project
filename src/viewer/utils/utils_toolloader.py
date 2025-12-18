@@ -18,7 +18,8 @@ import utils.utils_csvparsing as utilcsv
 import time
 import re
 from collections import defaultdict, deque
-from . import utils_gpu as utilgpu
+#from . import utils_gpu as utilgpu
+import utils.utils_gpu as utilgpu
 
 DEFAULT_TOOL_DEFINITION_PATH = Path(__file__).parent.parent.parent.parent / "resources/tools/"
 DEFAULT_PIPELINE_DEFINITION_PATH = Path(__file__).parent.parent.parent.parent / "resources/pipelines"
@@ -112,7 +113,7 @@ class ToolSpec(BaseModel):
             validated[key] = value
         return validated
 
-    def pull_image(self):
+    def pull_image(self: Any) -> bool:
         image_tag = self.container["image"]
         print(f"DEBUG: Pulling image {image_tag} for local run")
         result_code = os.system(f"docker pull {image_tag}")
@@ -120,7 +121,7 @@ class ToolSpec(BaseModel):
             return False # Pull failed for one reason or another
         return True # Pull success
     
-    def generate_docker_command(self, param_values: Dict[str, Union[int, float, bool, str]], mount_paths: Dict[str, str], path_remapping={}) -> str:
+    def generate_docker_command(self: Any, param_values: Dict[str, Union[int, float, bool, str]], mount_paths: Dict[str, str], path_remapping: dict={}) -> str:
         # This line will throw if validation fails
         param_values = self.validate_params(param_values)
 
@@ -223,7 +224,7 @@ def ensure_and_validate_mount_paths(
                 parent.mkdir(parents=True, exist_ok=True)
 
 
-def validate_user_request(tool_name: str, user_params: Dict, user_mounts: Dict[str, str], tool_registry_path: Union[str, Path] = DEFAULT_TOOL_DEFINITION_PATH, path_remapping={}) -> str:
+def validate_user_request(tool_name: str, user_params: Dict, user_mounts: Dict[str, str], tool_registry_path: Union[str, Path] = DEFAULT_TOOL_DEFINITION_PATH, path_remapping: dict={}) -> str:
     # Assumes streamlit session state is set up.
     base_mount_dir = Path(st.session_state.paths["out_dir"]).resolve()
     tool_dir = Path(tool_registry_path).resolve()
@@ -257,7 +258,8 @@ def submit_job(
     execution_mode: str = "any", #"cloud", "local",
     do_s3_cli_transfer: bool = False, # True will bypass FSX to use direct S3 file upload/download
     local_path_remapping: dict = {}, # Pass a container-host path translation as needed
-) -> Union[str, subprocess.Popen]:
+) -> Any:
+#) -> Union[str, subprocess.Popen]:
     """
     Submits a job either locally or via an AWS Lambda depending on Streamlit session state.
     Assumes streamlit session state is available/initialized.
@@ -390,10 +392,10 @@ def submit_and_run_job_sync(
     user_mounts: Dict[str, str],
     id_token: str | None = None,
     execution_mode: str = "any",  # can be "cloud", "local", or "any"
-    progress_bar=None,
-    status_box=None,
-    log=None,
-    metadata_path: Path = None,
+    progress_bar: Optional[Any]=None,
+    status_box: Optional[Any]=None,
+    log: Optional[Any]=None,
+    metadata_path: Optional[Path] = None,
     poll_interval: int = 15,
     do_s3_cli_transfer: bool = False, # True will bypass FSX to use direct S3 file upload/download
     local_path_remapping: dict = {}, # Pass a container-host path remapping
@@ -481,14 +483,17 @@ def submit_and_run_job_sync(
                 returncode = os.system(cmd)
                 if os.WEXITSTATUS(returncode) > 0:
                     print(f"DEBUG: Post-job sync failed, retrying appropriately for single-file.")
-                    log.error(f"Post job sync failed for job {job_id}. Possibly due to single-file, retrying with applicable command.")
+                    if log:
+                        log.error(f"Post job sync failed for job {job_id}. Possibly due to single-file, retrying with applicable command.")
                     sf_cmd = f"aws s3 cp s3://cbica-nichart-io/{mount_path} {mount_path}"
                     sf_returncode = os.system(sf_cmd)
                     if os.WEXITSTATUS(sf_returncode) > 0:
-                        log.error(f"Single-file sync also failed. Sync is uncompletable.")
+                        if log:
+                            log.error(f"Single-file sync also failed. Sync is uncompletable.")
                         raise RuntimeError(f"Cloud job {job_id} completed successfully, but post-job sync (including backup single-file sync) failed with exit codes {os.WEXITSTATUS(returncode)}, {os.WEXITSTATUS(sf_returncode)}. Please submit an issue report.")
                     else:
-                        log.info("Single-file sync succeeded, so this error can be ignored.")
+                        if log:
+                            log.info("Single-file sync succeeded, so this error can be ignored.")
             print("DEBUG: Done syncing from S3 after job completion.")  
             if log:
                 log.info(f"Done post-job sync for job {job_id}.")  
@@ -501,11 +506,11 @@ def submit_and_run_job_sync(
             }
         else: 
             raise RuntimeError(f"Cloud job {job_id} failed. Please see error logs and submit an issue report.")
-            return {
-                "mode": "cloud",
-                "status": "error",
-                "job_id": job_id
-            }
+            #return {
+                #"mode": "cloud",
+                #"status": "error",
+                #"job_id": job_id
+            #}
 
     # === LOCAL MODE (Docker) ===
     elif mode == "local":
@@ -520,8 +525,9 @@ def submit_and_run_job_sync(
                 status_box.update(label=f"Local container job: {status}", state="running")
             if status in ["exited", "paused", "removing", "dead"]:
                 exitcode = handle.exitcode()
-                log.commit(current_logs)
-                log.clear_live()
+                if log:
+                    log.commit(current_logs)
+                    log.clear_live()
                 if status_box:
                     status_box.update(label='Local container job finished', state="complete")
                 break
@@ -542,16 +548,16 @@ def submit_and_run_job_sync(
     else:
         # Unknown mode
         raise RuntimeError("An unexpected job execution mode was passed. Please submit an issue report.")
-        return {
-            "mode": mode,
-            "status": "error",
-            "error_message": "Unexpected job execution mode"
-        }
+        #return {
+            #"mode": mode,
+            #"status": "error",
+            #"error_message": "Unexpected job execution mode"
+        #}
 
 
 
 def resolve_vars(template: Dict[str, str], global_vars: Dict[str, str], step_outputs: Dict[str, Dict[str, str]]) -> Dict[str, str]:
-    def repl(match):
+    def repl(match: Any) -> Any:
         var = match.group(1)
         if ".outputs." in var:
             step_id, key = var.split(".outputs.")
@@ -560,11 +566,11 @@ def resolve_vars(template: Dict[str, str], global_vars: Dict[str, str], step_out
     
     return {k: re.sub(r"\$\{([^}]+)\}", repl, v) for k, v in template.items()}
 
-def parse_pipeline_steps(pipeline_yaml):
+def parse_pipeline_steps(pipeline_yaml: Any) -> Any:
     steps = pipeline_yaml["steps"]
     step_map = {s["id"]: s for s in steps}
     graph = defaultdict(list)
-    in_degree = defaultdict(int)
+    in_degree: dict = defaultdict(int)
 
     for s in steps:
         matches = re.findall(r"\$\{(\w+)\.outputs\.(\w+)\}", yaml.dump(s.get("inputs", {})))
@@ -585,7 +591,7 @@ def parse_pipeline_steps(pipeline_yaml):
     return execution_order, step_map
 
 @st.cache_data
-def parse_pipeline_requirements(pipeline_id):
+def parse_pipeline_requirements(pipeline_id: Any) -> Any:
     pipeline_path = DEFAULT_PIPELINE_DEFINITION_PATH / f"{pipeline_id}.yaml"
     if not pipeline_path.exists():
         raise FileNotFoundError(f"Pipeline definition '{pipeline_id}' not found at {pipeline_path}")
@@ -610,7 +616,7 @@ def parse_pipeline_requirements(pipeline_id):
 
     return reqs_set, req_params, req_order
 
-def check_requirements_met_nopanel(pipeline_name, harmonized):
+def check_requirements_met_nopanel(pipeline_name: str, harmonized: bool) -> Any:
     label = get_pipeline_label_by_name(pipeline_name)
     pipeline_id = get_pipeline_id_by_label(label, harmonized=harmonized)
     if pd.isna(pipeline_id) or not pipeline_id:
@@ -669,7 +675,7 @@ def check_requirements_met_nopanel(pipeline_name, harmonized):
     return result, blockers
 
 
-def check_requirements_met_panel(pipeline_name):
+def check_requirements_met_panel(pipeline_name: str) -> None:
     # That's right, emojis in the code. >:^)
     STATUS_ICON = {"green": "✅", "yellow": "⚠️", "red": "❌"}
     REQ_TO_HUMAN_READABLE = {
@@ -678,7 +684,7 @@ def check_requirements_met_panel(pipeline_name):
         'needs_demographics': 'Participants CSV', 
     }
     pipeline = st.session_state.sel_pipeline
-    pipeline_id = get_pipeline_id_by_label(pipeline, harmonized=st.session_state.user_sel[flag_harmonize])
+    pipeline_id = get_pipeline_id_by_label(pipeline, harmonized=st.session_state.user_sel['flag_harmonize'])
     reqs_set, reqs_params, req_order = parse_pipeline_requirements(pipeline_id)
 
     # need to generate counts
@@ -772,7 +778,7 @@ def check_requirements_met_panel(pipeline_name):
         st.info("Resolve the issues above to proceed. Click to expand each requirement for more details.")
 
 @st.cache_data
-def parse_pipeline_categories(pipeline_id):
+def parse_pipeline_categories(pipeline_id: Any) -> Any:
     pipeline_path = DEFAULT_PIPELINE_DEFINITION_PATH / f"{pipeline_id}.yaml"
     if not pipeline_path.exists():
         raise FileNotFoundError(f"Pipeline definition '{pipeline_id}' not found at {pipeline_path}")
@@ -783,13 +789,13 @@ def parse_pipeline_categories(pipeline_id):
     return pipeline_yaml.get('categories', [])
 
 @st.cache_data
-def get_all_pipeline_ids():
+def get_all_pipeline_ids() -> Any:
     directory = DEFAULT_PIPELINE_DEFINITION_PATH
     yaml_files = glob.glob(os.path.join(directory, "*.yaml"))
     basenames = [os.path.splitext(os.path.basename(f))[0] for f in yaml_files]
     return basenames
 
-def pipeline_is_harmonizable(pipeline_label):
+def pipeline_is_harmonizable(pipeline_label: str) -> bool:
     directory = DEFAULT_PIPELINE_DEFINITION_PATH
     pipelines = pd.read_csv(os.path.join(directory, 'list_pipelines.csv'))
     row = pipelines.loc[pipelines["Label"] == pipeline_label, "HarmonizedPipelineYaml"]
@@ -803,7 +809,7 @@ def pipeline_is_harmonizable(pipeline_label):
     return True
 
 @st.cache_data
-def pipeline_is_enabled_by_name(pipeline_name):
+def pipeline_is_enabled_by_name(pipeline_name: str) -> bool:
     directory = DEFAULT_PIPELINE_DEFINITION_PATH
     pipelines = pd.read_csv(os.path.join(directory, 'list_pipelines.csv'))
     row = pipelines.loc[pipelines["Name"] == pipeline_name, "EnabledInFrontEnd"]
@@ -813,21 +819,21 @@ def pipeline_is_enabled_by_name(pipeline_name):
     return False
 
 @st.cache_data
-def get_pipeline_name_by_label(pipeline_label):
+def get_pipeline_name_by_label(pipeline_label: str) -> Any:
     directory = DEFAULT_PIPELINE_DEFINITION_PATH
     pipelines = pd.read_csv(os.path.join(directory, 'list_pipelines.csv'))
     row = pipelines.loc[pipelines["Label"] == pipeline_label, "Name"]
     return row.iloc[0] if not row.empty else None    
 
 @st.cache_data
-def get_pipeline_label_by_name(pipeline_name):
+def get_pipeline_label_by_name(pipeline_name: str) -> Any:
     directory = DEFAULT_PIPELINE_DEFINITION_PATH
     pipelines = pd.read_csv(os.path.join(directory, 'list_pipelines.csv'))
     row = pipelines.loc[pipelines["Name"] == pipeline_name, "Label"]
     return row.iloc[0] if not row.empty else None      
 
 @st.cache_data
-def get_pipeline_id_by_label(pipeline_label, harmonized=False):
+def get_pipeline_id_by_label(pipeline_label: str, harmonized: bool=False) -> Any:
     if harmonized:
         field_to_retrieve = "HarmonizedPipelineYaml"
     else:
@@ -839,10 +845,10 @@ def get_pipeline_id_by_label(pipeline_label, harmonized=False):
     return row.iloc[0] if not row.empty else None
 
 @st.cache_data
-def overall_pipeline_category_listing():
+def overall_pipeline_category_listing() -> dict:
     # Returns a dictionary mapping a category to a list of associated pipelines.
     # Useful for rendering a subset of pipelines
-    res_dict = {}
+    res_dict: dict = {}
     pipelines = get_all_pipeline_ids()
     for pipeline_id in pipelines:
         categories = parse_pipeline_categories(pipeline_id)
@@ -854,7 +860,7 @@ def overall_pipeline_category_listing():
     return res_dict
 
 @st.cache_data
-def overall_pipeline_requirements_listing():
+def overall_pipeline_requirements_listing() -> dict:
     res_dict = {}
     pipelines = get_all_pipeline_ids()
     for pipeline_id in pipelines:
@@ -862,7 +868,7 @@ def overall_pipeline_requirements_listing():
         res_dict[pipeline_id] = req_set
     return res_dict
 
-def load_metadata(metadata_path: Path) -> Dict:
+def load_metadata(metadata_path: Optional[Path]) -> Any:
     if metadata_path is None:
         return {}
     if metadata_path.exists():
@@ -871,13 +877,13 @@ def load_metadata(metadata_path: Path) -> Dict:
     else:
         return {}
 
-def save_metadata(metadata_path: Path, metadata: Dict):
+def save_metadata(metadata_path: Path, metadata: Dict) -> None:
     with open(metadata_path, 'w') as f:
         json.dump(metadata, f, indent=2)
 
 def generate_metadata_key(tool_id: str,
                           inputs: Dict,
-                          params: Dict):
+                          params: Dict) -> Any:
     def sorted_str(d: Dict) -> str:
         return json.dumps(d, sort_keys=True)
     return f"{tool_id}|{sorted_str(inputs)}|{sorted_str(params)}"
@@ -899,7 +905,7 @@ def should_skip_step(metadata_path: Path,
     finished_time = datetime.fromisoformat(record["finished_time"])
 
     # Check mtime of all input files/dirs
-    input_mtime = 0
+    input_mtime = float(0)
     for path_str in inputs.values():
         path = Path(path_str)
         if path.is_file():
@@ -931,7 +937,7 @@ def record_step_submission(metadata_path: Path,
                            inputs: Dict,
                            outputs: Dict,
                            params: Dict
-                           ):
+                           ) -> None:
     metadata = load_metadata(metadata_path)
     key = generate_metadata_key(tool_id, inputs, params)
     metadata[key] = {
@@ -950,7 +956,7 @@ def record_step_completion(metadata_path: Path,
                            outputs: Dict,
                            params: Dict,
                            status: str = "success"
-                           ):
+                           ) -> None:
     metadata = load_metadata(metadata_path)
     key = generate_metadata_key(tool_id, inputs, params)
     
@@ -971,14 +977,14 @@ def record_step_completion(metadata_path: Path,
     save_metadata(metadata_path, metadata)
     
 
-def clear_all_metadata(metadata_path: Path):
+def clear_all_metadata(metadata_path: Path) -> None:
     if metadata_path.exists():
         metadata_path.unlink()
 
 def clear_step_metadata(metadata_path: Path,
                         tool_id: str,
                         inputs: Dict,
-                        params: Dict):
+                        params: Dict) -> None:
     metadata = load_metadata(metadata_path)
     key = generate_metadata_key(tool_id, inputs, params)
     if key in metadata:
@@ -987,15 +993,15 @@ def clear_step_metadata(metadata_path: Path,
 
 def run_pipeline(pipeline_id: str,
                 global_vars: Dict[str, str],
-                pipeline_progress_bar=None,
-                process_progress_bar=None,
-                execution_mode='cloud',
-                process_status_box=None,
-                log=None,
-                metadata_location=None,
-                reuse_cached_steps=True,
-                local_path_remapping={},
-                ):
+                pipeline_progress_bar: Optional[Any]=None,
+                process_progress_bar: Optional[Any]=None,
+                execution_mode: str='cloud',
+                process_status_box: Optional[Any]=None,
+                log: Optional[Any]=None,
+                metadata_location: Optional[Any]=None,
+                reuse_cached_steps: bool=True,
+                local_path_remapping: dict={},
+                ) -> Any:
     if metadata_location is not None:
         metadata_location = Path(metadata_location)
 
@@ -1007,9 +1013,10 @@ def run_pipeline(pipeline_id: str,
     with open(pipeline_path, 'r') as f:
         pipeline_yaml = yaml.safe_load(f)
 
-    log.info(f"Starting pipeline {pipeline_id}.")
+    if log:
+        log.info(f"Starting pipeline {pipeline_id}.")
     order, step_map = parse_pipeline_steps(pipeline_yaml)
-    step_outputs = {}
+    step_outputs: dict = {}
     total_steps = len(order)
     current_step = 0
     if pipeline_progress_bar:
@@ -1022,7 +1029,8 @@ def run_pipeline(pipeline_id: str,
         step = step_map[sid]
         tool_id = step["tool"]
 
-        log.info(f"Starting execution of pipeline step {tool_id}.")
+        if log:
+            log.info(f"Starting execution of pipeline step {tool_id}.")
         tool_yaml = DEFAULT_TOOL_DEFINITION_PATH / f"{tool_id}.yaml"
         tool = load_tool_spec_from_yaml(tool_yaml)
 
@@ -1057,7 +1065,8 @@ def run_pipeline(pipeline_id: str,
                 params=resolved_params,
                 outputs=resolved_outputs
             ):
-                log.info(f"[CACHE] Skipping step: {tool_id} because it was determined that a previous execution could be reused.")
+                if log:
+                    log.info(f"[CACHE] Skipping step: {tool_id} because it was determined that a previous execution could be reused.")
                 continue # Skip to next pipeline step
         if pipeline_progress_bar:
             pipeline_progress_bar.set_description(f"Running {tool_id}...")
@@ -1094,7 +1103,8 @@ def run_pipeline(pipeline_id: str,
                                    params=resolved_params,
                                    status="success")
             print(f"Step {sid}, {tool_id} finished succesfully.")
-            log.info(f"Pipeline step {tool_id} finished successfully")
+            if log:
+                log.info(f"Pipeline step {tool_id} finished successfully")
         else: # Step failed, loudly fail
             record_step_completion(metadata_path=metadata_location,
                                    tool_id=tool_id,
@@ -1102,7 +1112,8 @@ def run_pipeline(pipeline_id: str,
                                    outputs=resolved_outputs,
                                    params=resolved_params,
                                    status="failure")
-            log.error(f"Pipeline step {tool_id} failed with status {result['status']}.")
+            if log:
+                log.error(f"Pipeline step {tool_id} failed with status {result['status']}.")
             print(f"Step {sid}, {tool_id} failed with status {result["status"]}, see error log:")
             print(f"Error message: {result["error_message"]}")
             if process_progress_bar:
@@ -1111,7 +1122,8 @@ def run_pipeline(pipeline_id: str,
                 process_status_box.update(label=f"Pipeline failed", state="error")
             raise RuntimeError(result["error_message"])
         step_outputs[sid] = resolved_outputs  # Used for future interpolation
-    log.info(f"Pipeline {pipeline_id} completed successfully.")
+    if log:
+        log.info(f"Pipeline {pipeline_id} completed successfully.")
     if process_progress_bar:
         process_progress_bar.set_description(f"Pipeline finished")
     if process_status_box:

@@ -6,10 +6,11 @@ from graphviz import Digraph
 from collections import defaultdict
 import utils.utils_pages as utilpg
 from collections import defaultdict, deque
+from typing import Any, List, Optional
 
 # Load steps from YAML files
 @st.cache_data
-def load_steps_from_yaml(folder):
+def load_steps_from_yaml(folder: str) -> dict:
     steps = {}
     for fname in os.listdir(folder):
         if fname.endswith(".yaml") or fname.endswith(".yml"):
@@ -21,7 +22,7 @@ def load_steps_from_yaml(folder):
     return steps
 
 # Build graph (only once)
-def build_graph(steps):
+def build_graph(steps: dict) -> Any:
     step_inputs = {}
     step_outputs = {}
     file_to_producers = defaultdict(list)
@@ -43,8 +44,8 @@ def build_graph(steps):
     }
 
 # Determine roles of files
-def get_file_roles(steps):
-    roles = defaultdict(lambda: {"input": False, "output": False})
+def get_file_roles(steps: dict) -> Any:
+    roles: dict = defaultdict(lambda: {"input": False, "output": False})
     for step in steps.values():
         for f in step['in_list']:
             roles[f]["input"] = True
@@ -53,7 +54,7 @@ def get_file_roles(steps):
     return roles
 
 # Choose color by file role
-def get_file_color(role):
+def get_file_color(role: Any) -> Any:
     if role["input"] and role["output"]:
         return "khaki"
     elif role["input"]:
@@ -63,7 +64,7 @@ def get_file_color(role):
     else:
         return "white"
     
-def detect_reachable_steps(graph, list_inputs, flag_all = False):
+def detect_reachable_steps(graph: dict, list_inputs: List, flag_all: bool = False) -> Any:
     '''
     Detects steps reachable from process graph and given input list
     '''
@@ -108,7 +109,7 @@ def detect_reachable_steps(graph, list_inputs, flag_all = False):
     return needed_steps
 
 
-def topological_sort(steps, sel_steps):
+def topological_sort(steps: dict, sel_steps: List) -> Any:
     from collections import defaultdict, deque
 
     # Build graph for sorting
@@ -141,7 +142,7 @@ def topological_sort(steps, sel_steps):
 
     return sorted_steps
 
-def detect_reachable_from_steps(steps, starting_steps):
+def detect_reachable_from_steps(steps: Any, starting_steps: Any) -> Any:
 
     # Initialize queue with outputs from starting steps
     reachable_steps = set(starting_steps)
@@ -150,6 +151,12 @@ def detect_reachable_from_steps(steps, starting_steps):
 
     while queue:
         step_name = queue.popleft()
+        
+        ## FIXME these vars were not defined ??
+        step_inputs: dict = {}
+        step_outputs: dict = {}
+        file_to_consumers: dict = {}
+        
         outputs = step_outputs.get(step_name, [])
         produced_files.update(outputs)
 
@@ -166,7 +173,7 @@ def detect_reachable_from_steps(steps, starting_steps):
     return reachable_steps
 
 
-def find_disconnected_pipelines(steps, sel_steps):
+def find_disconnected_pipelines(steps: Any, sel_steps: Any) -> Any:
     from collections import defaultdict, deque
 
     # Build undirected connectivity graph (ignore direction for grouping)
@@ -204,7 +211,7 @@ def find_disconnected_pipelines(steps, sel_steps):
 
     return sorted_pipelines
 
-def build_proc_graph(steps, sel_steps, list_inputs=None):
+def build_proc_graph(steps: Any, sel_steps: Any, list_inputs: Optional[Any]=None) -> Any:
     '''
     Creates a graph from process definitions
     '''    
@@ -261,7 +268,7 @@ def build_proc_graph(steps, sel_steps, list_inputs=None):
     return dot, all_required_steps
 
 # Generate CLI pipeline command
-def generate_pipeline_command(steps, step_list):
+def generate_pipeline_command(steps: Any, step_list: Any) -> Any:
     cmds = []
     for name in step_list:
         step = steps[name]

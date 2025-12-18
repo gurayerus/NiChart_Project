@@ -34,7 +34,7 @@ alphas_init = {
 }
 
 
-def rgb_picker(rgb_init=[255, 0, 0], label="Pick a color"):
+def rgb_picker(rgb_init: list=[255, 0, 0], label: str="Pick a color") -> list:
     '''
     Pick a color
     '''
@@ -54,7 +54,7 @@ def rgb_picker(rgb_init=[255, 0, 0], label="Pick a color"):
     
     return rgba_new
 
-def alpha_picker(alpha_init = 1.0, label="Pick alpha"):
+def alpha_picker(alpha_init: float = 1.0, label: str="Pick alpha") -> float:
     '''
     Pick a alpha value
     '''
@@ -71,7 +71,7 @@ def alpha_picker(alpha_init = 1.0, label="Pick alpha"):
     return new_alpha
 
 
-def panel_update_cmaps():
+def panel_update_cmaps() -> None:
     '''
     Update color maps and alpha for plots
     '''

@@ -4,6 +4,7 @@ import docker
 import random
 import json
 from time import sleep
+from typing import Any
 
 from abc import ABC, abstractmethod
 
@@ -62,7 +63,7 @@ class DummyHandle(TaskHandle):
     def get_id(self) -> str:
         return self.task_name
     
-    def get_logs(self):
+    def get_logs(self: Any) -> str:
         return "placeholder logs"
     
 class DockerContainerHandle(TaskHandle):
@@ -70,14 +71,14 @@ class DockerContainerHandle(TaskHandle):
         self.container_name = container_name
         self.client = docker.from_env()
 
-    def status(self) -> str:
+    def status(self: Any) -> Any:
         try:
             container = self.client.containers.get(self.container_name)
             return container.status
         except docker.errors.NotFound:
             return "deleted"
 
-    def exitcode(self) -> int:
+    def exitcode(self: Any) -> Any:
         currentstatus = self.status()
         if currentstatus.lower() == 'exited':
             container = self.client.containers.get(self.container_name)
@@ -87,29 +88,29 @@ class DockerContainerHandle(TaskHandle):
             return 0
             
 
-    def exists(self) -> bool:
+    def exists(self: Any) -> bool:
         try:
             self.client.containers.get(self.container_name)
             return True
         except docker.errors.NotFound:
             return False
 
-    def cleanup(self) -> None:
+    def cleanup(self: Any) -> None:
         try:
             container = self.client.containers.get(self.container_name)
             container.remove(force=True)
         except docker.errors.NotFound:
             pass
 
-    def get_id(self) -> str:
+    def get_id(self: Any) -> Any:
         return self.container_name
     
-    def get_logs(self) -> str:
+    def get_logs(self: Any) -> Any:
         return _get_docker_logs(self.container_name)
 
 
 @st.cache_data(ttl=10)
-def _get_docker_logs(container_name: str) -> str:
+def _get_docker_logs(container_name: str) -> Any:
     try:
         client = docker.from_env()
         container = client.containers.get(container_name)
@@ -126,7 +127,7 @@ class BatchJobHandle(TaskHandle):
         self.region = region
         self.client = boto3.client("batch", region_name=region)
 
-    def status(self) -> str:
+    def status(self) -> Any:
         response = self.client.describe_jobs(jobs=[self.job_id])
         if not response["jobs"]:
             return "deleted"
@@ -217,7 +218,7 @@ def parse_lambda_response(response_str: str) -> TaskHandle:
     else:
         raise ValueError(f"Unknown task mode '{mode}' in Lambda response")
 
-def add_job_to_session(job_handle):
+def add_job_to_session(job_handle: Any) -> None:
     print(f"Attempting to add job with handle {job_handle.get_id()}")
     if 'active_jobs' not in st.session_state:
         st.session_state.active_jobs = {}
@@ -242,7 +243,7 @@ STATUS_COLOR_MAP = {
 }
 
 # --- Render colored status badge ---
-def render_status_indicator(status: str):
+def render_status_indicator(status: str) -> None:
     color = STATUS_COLOR_MAP.get(status.upper(), "black")
     st.markdown(
         f"<span style='background-color:{color}; color:white; padding:0.25em 0.5em; "
@@ -253,7 +254,7 @@ def render_status_indicator(status: str):
 
 
 # --- Poll status ---
-def poll_job_status(job):
+def poll_job_status(job: Any) -> Any:
     try:
         if job["type"] == "docker":
             container = docker_client.containers.get(job["id"])
@@ -271,7 +272,7 @@ def poll_job_status(job):
         return "FAILED" if "not found" in str(e).lower() else "UNKNOWN"
 
 # --- Update all jobs ---
-def update_all_statuses():
+def update_all_statuses() -> None:
     for job in st.session_state.jobs:
         if job["status"] not in {"SUCCEEDED", "FAILED"}:
             job["status"] = poll_job_status(job)

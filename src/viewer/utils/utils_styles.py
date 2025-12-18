@@ -1,6 +1,6 @@
 import streamlit as st
 
-def inject_global_css():
+def inject_global_css() -> None:
     """
     Injects all necessary global CSS styles, including card layouts and
     centered content, into the Streamlit application.

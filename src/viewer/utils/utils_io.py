@@ -13,8 +13,10 @@ import re
 import streamlit_antd_components as sac
 import shutil
 import time
-from typing import Any, BinaryIO, List, Optional, Dict, Tuple
+from typing import Any, Optional, BinaryIO, List, Optional, Dict, Tuple
 from dataclasses import dataclass, asdict
+from pathlib import Path
+import tkinter as tk
 
 import difflib
 
@@ -25,7 +27,7 @@ logger = setup_logger()
 ##############################################################
 ## Generic IO functions
 ##@st.cache_data  # type:ignore
-def read_csv(fname):
+def read_csv(fname: str | Path) -> Optional[pd.DataFrame]:
     try:
         df = pd.read_csv(fname)
         st.toast(f'Loaded data file: {os.path.basename(fname)}')
@@ -34,7 +36,7 @@ def read_csv(fname):
         st.warning(f'Could not load data file: {os.path.basename(fname)}')
         return None
 
-def get_file_count(folder_path: str, file_suff: List[str] = []) -> int:
+def get_file_count(folder_path: str | Path, file_suff: List[str] = []) -> int:
     '''
     Returns the count of files matching any of the suffixes in `file_suff`
     within the output folder. If `file_suff` is empty, all files are counted.
@@ -65,7 +67,7 @@ def get_file_names(folder_path: str, file_suff: str = "") -> pd.DataFrame:
     df_out = pd.DataFrame(columns=["FileName"], data=f_names)
     return df_out
 
-def remove_dir(out_dir):
+def remove_dir(out_dir: str | Path) -> bool:
     '''
     Delete a folder
     '''
@@ -81,33 +83,33 @@ def remove_dir(out_dir):
         st.error(f"Could not delete folder: {out_dir}")
         return False
 
-def browse_file(path_init: str) -> Any:
-    '''
-    File selector
-    Returns the file name selected by the user and the parent folder
-    '''
-    root = tk.Tk()
-    root.withdraw()  # Hide the main window
-    out_file = filedialog.askopenfilename(initialdir=path_init)
-    root.destroy()
-    if len(out_file) == 0:
-        return None
-    return out_file
+#def browse_file(path_init: str | Path) -> Optional[str]:
+    #'''
+    #File selector
+    #Returns the file name selected by the user and the parent folder
+    #'''
+    #root = tk.Tk()
+    #root.withdraw()  # Hide the main window
+    #out_file = filedialog.askopenfilename(initialdir=path_init)
+    #root.destroy()
+    #if len(out_file) == 0:
+        #return None
+    #return out_file
 
-def browse_folder(path_init: str) -> Any:
-    '''
-    Folder selector
-    Returns the folder name selected by the user
-    '''
-    root = tk.Tk()
-    root.withdraw()  # Hide the main window
-    out_path = filedialog.askdirectory(initialdir=path_init)
-    root.destroy()
-    if len(out_path) == 0:
-        return None
-    return out_path
+#def browse_folder(path_init: str) -> Optional[str]:
+    #'''
+    #Folder selector
+    #Returns the folder name selected by the user
+    #'''
+    #root = tk.Tk()
+    #root.withdraw()  # Hide the main window
+    #out_path = filedialog.askdirectory(initialdir=path_init)
+    #root.destroy()
+    #if len(out_path) == 0:
+        #return None
+    #return out_path
 
-def get_subfolders(path: str) -> list:
+def get_subfolders(path: str | Path) -> list:
     '''
     Returns a list of subfolders in input folder
     '''
@@ -118,7 +120,7 @@ def get_subfolders(path: str) -> list:
             subdirs.append(item)
     return sorted(subdirs)
 
-def zip_folders(in_dir, folders, output_zip):
+def zip_folders(in_dir: str | Path, folders: List[str], output_zip: str | Path) -> None:
     """
     Zip multiple folders into a single zip file.
     """
@@ -134,7 +136,7 @@ def zip_folders(in_dir, folders, output_zip):
 
     print(f"Created zip: {output_zip}")
 
-def zip_folder(in_dir: str, f_out: str) -> Optional[bytes]:
+def zip_folder(in_dir: str | Path, f_out: str) -> Optional[bytes]:
     '''
     Zips a folder and its contents.
     '''
@@ -150,10 +152,10 @@ def zip_folder(in_dir: str, f_out: str) -> Optional[bytes]:
 
         return download_dir
 
-def clear_folder(in_dir):
+def clear_folder(in_dir: str | Path) -> None:
     shutil.rmtree(in_dir)
 
-def unzip_zip_files(in_dir: str) -> None:
+def unzip_zip_files(in_dir: str | Path) -> None:
     '''
     Unzips all ZIP files in the input dir and removes the original ZIP files.
     '''
@@ -165,7 +167,7 @@ def unzip_zip_files(in_dir: str) -> None:
                     zip_ref.extractall(in_dir)
                     os.remove(zip_path)
 
-def copy_and_unzip_uploaded_files(in_files: list, d_out: str) -> None:
+def copy_and_unzip_uploaded_files(in_files: list, d_out: str | Path) -> None:
     '''
     Copy uploaded files to the output dir and unzip zip files
     '''
@@ -184,7 +186,7 @@ def copy_and_unzip_uploaded_files(in_files: list, d_out: str) -> None:
     if os.path.exists(d_out):
         unzip_zip_files(d_out)
 
-def callback_copy_uploaded():
+def callback_copy_uploaded() -> None:
     '''
     Copies files to local storage
     '''
@@ -193,11 +195,11 @@ def callback_copy_uploaded():
             st.session_state['_uploaded_input'], st.session_state.paths["target"]
         )
 
-def wrap_callback_copy_uploaded(keymod='', out_dir=None):
+def wrap_callback_copy_uploaded(keymod: str='', out_dir: Optional[str] = None) -> Any:
     if out_dir is None:
         out_dir = st.session_state.paths['target']
     out_d = out_dir
-    def callback_copy_uploaded():
+    def callback_copy_uploaded() -> None:
         '''
         Copies files to local storage
         '''
@@ -210,7 +212,7 @@ def wrap_callback_copy_uploaded(keymod='', out_dir=None):
     
     return callback_copy_uploaded
 
-def upload_multiple_files(out_dir):
+def upload_multiple_files(out_dir: str) -> None:
     '''
     Upload user data to target folder
     Input data may be a folder, multiple files, or a zip file (unzip the zip file if so)
@@ -231,43 +233,47 @@ def upload_multiple_files(out_dir):
             help="Input files can be uploaded as a folder, multiple files, or a single zip file",
         )
 
-def upload_multi(out_dir):
-    """
-    Panel for uploading multiple input files or folder(s)
-    """
-    # Check if data exists
-    if st.session_state.app_type == "cloud":
-        # Upload data
-        upload_folder(
-            out_dir,
-            "Input files or folders",
-            False,
-            "Input files can be uploaded as a folder, multiple files, or a single zip file",
-        )
+### FIXME
+#def upload_folder(out_dir: str, label: str, flag: bool, msg: str) -> None:
+    #st.write('FIXME: Missing')
 
-    else:  # st.session_state.app_type == 'desktop'
-        if not os.path.exists(out_dir):
-            try:
-                os.symlink(sel_dir, out_dir)
-            except:
-                st.error(
-                    f"Could not link user input to destination folder: {out_dir}"
-                )
+#def upload_multi(out_dir: str) -> None:
+    #"""
+    #Panel for uploading multiple input files or folder(s)
+    #"""
+    ## Check if data exists
+    #if st.session_state.app_type == "cloud":
+        ## Upload data
+        #upload_folder(
+            #out_dir,
+            #"Input files or folders",
+            #False,
+            #"Input files can be uploaded as a folder, multiple files, or a single zip file",
+        #)
 
-    # Check out files
-    fcount = get_file_count(st.session_state.paths[dtype])
-    if fcount > 0:
-        st.session_state.flags[dtype] = True
-        p_dicom = st.session_state.paths[dtype]
-        st.success(
-            f" Uploaded data: ({p_dicom}, {fcount} files)",
-            icon=":material/thumb_up:",
-        )
-        time.sleep(4)
+    #else:  # st.session_state.app_type == 'desktop'
+        #if not os.path.exists(out_dir):
+            #try:
+                #os.symlink(sel_dir, out_dir)
+            #except:
+                #st.error(
+                    #f"Could not link user input to destination folder: {out_dir}"
+                #)
 
-        st.rerun()
+    ## Check out files
+    #fcount = get_file_count(st.session_state.paths[dtype])
+    #if fcount > 0:
+        #st.session_state.flags[dtype] = True
+        #p_dicom = st.session_state.paths[dtype]
+        #st.success(
+            #f" Uploaded data: ({p_dicom}, {fcount} files)",
+            #icon=":material/thumb_up:",
+        #)
+        #time.sleep(4)
 
-def upload_single_file(out_dir, out_name, label) -> None:
+        #st.rerun()
+
+def upload_single_file(out_dir: str | Path, out_name: str, label: str) -> bool:
     '''
     Upload user file to target folder
     '''
@@ -293,7 +299,7 @@ def upload_single_file(out_dir, out_name, label) -> None:
         return False
 
 
-def create_img_list(dtype: str, show_warning=False) -> None:
+def create_img_list(dtype: str, show_warning: bool=False) -> Optional[pd.DataFrame]:
     '''
     Create a list of input images
     '''
@@ -312,7 +318,7 @@ def create_img_list(dtype: str, show_warning=False) -> None:
         return None
     else:
         # Remove common suffix to get mrid
-        def remove_common_suffix(files):
+        def remove_common_suffix(files: List[str]) -> List[str]:
             reversed_names = [f[::-1] for f in files]
             common_suffix = os.path.commonprefix(reversed_names)[::-1]
             return [f[:-len(common_suffix)] if common_suffix else f for f in files]
@@ -358,10 +364,10 @@ def normalize_demographics_df(
     df_raw: pd.DataFrame,
     mrid_reference_df: pd.DataFrame,
     *,
-    required_cols=("MRID", "Age", "Sex"),
-    mrid_col_in_ref="MRID",
-    age_range=(0, 120),
-    mrid_similarity_threshold=0.85
+    required_cols: tuple=("MRID", "Age", "Sex"),
+    mrid_col_in_ref: str="MRID",
+    age_range: Tuple=(0, 120),
+    mrid_similarity_threshold: float=0.85
 ) -> Tuple[pd.DataFrame, List[Dict[str, Any]]]:
     """
     Normalize a demographics DataFrame to have canonical columns (MRID, Age, Sex),
@@ -451,7 +457,7 @@ def normalize_demographics_df(
     df = df[list(required_cols) + [c for c in df.columns if c not in required_cols]]
 
     # ---- 3) Normalize Sex to {'M','F'} ----
-    def normalize_sex(x) -> Any:
+    def normalize_sex(x: Optional[str]) -> Any:
         if pd.isna(x):
             return pd.NA
         s = str(x).strip().lower()
@@ -527,7 +533,7 @@ def normalize_demographics_df(
 ##############################################################
 ## Panels for IO
 
-def load_dicoms(default_modality='t1'):
+def load_dicoms(default_modality: str='t1') -> None:
     tab = sac.tabs(
         items=[
             sac.TabsItem(label='Upload'),
@@ -562,7 +568,7 @@ def load_dicoms(default_modality='t1'):
     if st.button("Delete"):
         remove_dir(out_dir)
 
-def load_nifti(default_modality='t1', forced_modality=None):
+def load_nifti(default_modality: str='t1', forced_modality: Optional[str]=None) -> None:
     '''
     Panel to load nifti images
     '''
@@ -597,7 +603,7 @@ def load_nifti(default_modality='t1', forced_modality=None):
         )  
     
     
-def load_subj_list():
+def load_subj_list() -> None:
     '''
     Panel for uploading subject list with variables required for processing
     '''    
@@ -693,7 +699,7 @@ def load_subj_list():
             #remove_dir(out_dir)
 
 
-def load_user_csv():
+def load_user_csv() -> None:
     '''
     Panel for uploading data file
     '''    
@@ -748,7 +754,7 @@ def load_user_csv():
 ##############################################################
 ## Streamlit panels for IO
 
-def panel_import_demo_data():
+def panel_import_demo_data() -> None:
     st.info("You can import some demonstration data into your projects list by clicking the button below.")
     if st.button("Import"):
         # Copy demo dirs to user folder (TODO: make this less hardcoded)
@@ -777,10 +783,10 @@ def panel_import_demo_data():
         st.success(f"NiChart demonstration projects have been added to your projects list: {', '.join(demo_names)} ")
         return
 
-def get_path_for_project(project):
+def get_path_for_project(project: str) -> str | Path:
     return os.path.join(st.session_state.paths['out_dir'], project)
 
-def preview_project_folder(project):
+def preview_project_folder(project: str) -> None:
     """
     Panel for viewing files in a project folder
     """
@@ -788,7 +794,7 @@ def preview_project_folder(project):
         in_dir = get_path_for_project(project)
         utildv.data_overview(in_dir)
 
-def panel_select_existing_with_preview(out_dir):
+def panel_select_existing_with_preview(out_dir: str) -> None:
     left, right = st.columns([1, 2], gap='large')
     
     list_projects = get_subfolders(out_dir)
@@ -814,7 +820,7 @@ def panel_select_existing_with_preview(out_dir):
         utilss.update_project(sel_project)
         st.success(f"Selected project {sel_project}")
 
-def validate_project_name(string):
+def validate_project_name(string: str) -> bool:
     """
     Return True if `name` is safe for filenames/directories.
     Allows only alphanumerics and underscores.
@@ -823,7 +829,7 @@ def validate_project_name(string):
     # Must contain only letters, digits, or underscores
     return bool(re.fullmatch(r'[A-Za-z0-9_]+', string))
 
-def panel_create_new():
+def panel_create_new() -> None:
     with st.container(border=True):
         st.info("Write a new project name and hit enter to save.")
         sel_project = st.text_input(
@@ -841,7 +847,7 @@ def panel_create_new():
             utilss.update_project(sel_project)
             st.success(f"Created project {sel_project}.")
 
-def panel_select_project(out_dir, curr_project):
+def panel_select_project(out_dir: str, curr_project: str) -> Optional[str]:
     '''
     Panel for creating/selecting a project name/folder (to keep all data for the current project)
     '''
@@ -884,7 +890,7 @@ def panel_select_project(out_dir, curr_project):
                     shutil.rmtree(destination_path)
                 shutil.copytree(demo, destination_path, dirs_exist_ok=True)
             st.success(f"NiChart demonstration projects have been added to your projects list: {', '.join(demo_names)} ")
-            return
+            return None
       
     if sel_mode == 'Create New':
         sel_project = st.text_input(
@@ -904,12 +910,15 @@ def panel_select_project(out_dir, curr_project):
                 label_visibility = 'collapsed',
             )
     if sel_project is None:
-        return
+        return None
     
     if st.button("Select"):
         if sel_project != curr_project:
             utilss.update_project(sel_project)
         return sel_project
+    
+    return None
+    
 
 @dataclass
 class RequirementStatus:
@@ -919,12 +928,12 @@ class RequirementStatus:
     target: int # reference count for 'green'
     note: str = '' # short human message
 
-def _csv_severity(report) -> str:
+def _csv_severity(report: utilcsv.CsvValidationReport) -> str:
     if not report.file_ok or not report.columns_ok:
         return "red"
     return "yellow" if report.issues else "green"
 
-def _issues_dataframe(issues) -> pd.DataFrame:
+def _issues_dataframe(issues: Optional[List]) -> pd.DataFrame:
     """Makes a nice table for streamlit from List[CSVIssue]"""
     if not issues:
         return pd.DataFrame(columns=["mrid", "row", "column", "value", "reason"])
@@ -967,7 +976,7 @@ def compute_counts(ctx: dict = {}) -> dict:
     }
     return res
 
-def classify_cardinality(req_order, counts: dict):
+def classify_cardinality(req_order: List, counts: dict) -> List:
     """
     req_order: list[(name, params)]
     counts: dict name-> int
@@ -997,7 +1006,7 @@ def classify_cardinality(req_order, counts: dict):
         out.append(RequirementStatus(name=name, status=status, count=c, target=target, note=note))
     return out
 
-def panel_ask_harmonize():
+def panel_ask_harmonize() -> None:
     sel_method = st.session_state.sel_pipeline
     harmonizable = ['spare-ad', 'spare-ba', 'dlmuse', 'dlmuse-dlwmls', 'spare-smoking', 'spare-hypertension', 'spare-obesity', 'spare-diabetes']
     if sel_method in harmonizable:
@@ -1007,9 +1016,9 @@ def panel_ask_harmonize():
                     """)
         
         harmonize = st.checkbox("Harmonize to reference data? (Requires >= 30 scans)")
-        st.session_state.user_sel[flag_harmonize] = harmonize
+        st.session_state.user_sel['flag_harmonize'] = harmonize
 
-def panel_guided_upload_data():
+def panel_guided_upload_data() -> None:
     # That's right, emojis in the code. >:^)
     STATUS_ICON = {"green": "✅", "yellow": "⚠️", "red": "❌"}
     REQ_TO_HUMAN_READABLE = {
@@ -1024,7 +1033,7 @@ def panel_guided_upload_data():
     else:
         st.info(f"Pipeline {pipeline} was selected, so we'll guide you through the required inputs.")
 
-    pipeline_id = utiltl.get_pipeline_id_by_label(pipeline, harmonized=st.session_state.user_sel[flag_harmonize])
+    pipeline_id = utiltl.get_pipeline_id_by_label(pipeline, harmonized=st.session_state.user_sel['flag_harmonize'])
     reqs_set, reqs_params, req_order = utiltl.parse_pipeline_requirements(pipeline_id)
 
     # need to generate counts
@@ -1032,7 +1041,9 @@ def panel_guided_upload_data():
     
     items = classify_cardinality(req_order, counts)
     
-    count_max_key = max(counts, key=counts.get)
+    #count_max_key = max(counts, key=counts.get)
+    count_max_key = max(counts, key=lambda k: counts[k])
+
     count_max_value = counts[count_max_key]
     count_diffs = {key: abs(counts[key]-count_max_value) for key in counts.keys() if key != count_max_key}
 
@@ -1126,7 +1137,7 @@ def panel_guided_upload_data():
         st.info("Resolve the issues above to proceed. Click to expand each requirement for more details.")
     pass
 
-def panel_guided_nifti_upload(modality='t1'):
+def panel_guided_nifti_upload(modality: str='t1') -> None:
     left, right = st.columns(2)
     with left:
         do_nifti = st.button("Upload NIFTI files")
@@ -1144,13 +1155,13 @@ def panel_guided_nifti_upload(modality='t1'):
         load_dicoms()
     pass
 
-def panel_guided_demographics_upload():
+def panel_guided_demographics_upload() -> None:
     load_subj_list()
 
-def panel_guided_upload_additionaldata():
+def panel_guided_upload_additionaldata() -> None:
     pass
 
-def panel_load_data(default=None, default_nifti_type=None):
+def panel_load_data(default: Optional[str]=None, default_nifti_type: Optional[str]=None) -> None:
     '''
     Panel for loading user data
     '''

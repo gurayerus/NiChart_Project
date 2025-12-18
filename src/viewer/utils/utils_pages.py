@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from PIL import Image
 
-def set_global_style():
+def set_global_style() -> None:
     st.markdown(
         """
         <style>
@@ -28,7 +28,7 @@ def config_page() -> None:
         },
     )
 
-def add_sidebar_options():
+def add_sidebar_options() -> None:
     with st.sidebar:
 
         col1, col2 = st.columns([1, 1])

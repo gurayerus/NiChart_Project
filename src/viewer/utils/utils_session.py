@@ -1,6 +1,6 @@
 import os
 import shutil
-from typing import Any
+from typing import Any, Optional
 import jwt
 import time
 import yaml
@@ -47,7 +47,7 @@ def process_session_user_email() -> Any:
 #################################################
 ## Functions to update session variables
 
-def update_project(sel_project) -> None:
+def update_project(sel_project: Optional[str]) -> None:
     """
     Updates when project changes
     """
@@ -90,14 +90,14 @@ def update_project(sel_project) -> None:
 #################################################
 ## Misc utility functions
 
-def disp_session_state():
+def disp_session_state() -> None:
     '''
     Show session state variables
     '''
     if '_debug_flag_show' not in st.session_state:
         st.session_state['_debug_flag_show'] = st.session_state.system_vars['flag_show_session']
 
-    def update_val():
+    def update_val() -> None:
         st.session_state.system_vars['flag_show_session'] = st.session_state['_debug_flag_show']
 
     sac.divider(label='Debug', icon = 'gear',  align='center', color='gray')
@@ -110,7 +110,7 @@ def disp_session_state():
     if st.session_state.system_vars['flag_show_session']:
         with st.container(border=True):
             st.markdown('##### Session State:')
-            list_items = sorted([x for x in st.session_state.keys() if not x.startswith('_')])
+            list_items = sorted([x for x in st.session_state.keys() if not str(x).startswith('_')])
             #list_items = sorted([x for x in st.session_state.keys() if x.startswith('_')])
             st.pills(
                 "Select Session State Variable(s) to View",
@@ -127,7 +127,7 @@ def disp_session_state():
                 st.write(st.session_state[sel_var])
     #print('FIXME: This is bypassed for now ...')
 
-def copy_test_folders():
+def copy_test_folders() -> None:
     '''
     Copy demo folders into user folders as needed
     '''
@@ -168,7 +168,7 @@ def reset_dicoms() -> None:
 #################################################
 ## Functions to initialize session variables
 
-def init_paths():
+def init_paths() -> None:
     '''
     Set paths to pre-defined folders
     '''
@@ -319,11 +319,11 @@ def init_dicts() -> None:
 
 def init_muse_roi_def() -> None:
     # Paths to roi lists
-    muse = {
+    muse: dict[str, Any]  = {
         'path': os.path.join(st.session_state.paths['resources'], 'lists', 'MUSE'),
         'list_rois' : 'MUSE_listROIs.csv',
         'list_derived' : 'MUSE_mapping_derivedROIs.csv',
-        'list_groups' : 'MUSE_ROI_Groups_v1.csv'
+        'list_groups' : 'MUSE_ROI_Groups_v1.csv',
     }
     
     # Read roi lists to dictionaries
@@ -352,7 +352,7 @@ def init_muse_roi_def() -> None:
         'muse' : muse
     }
 
-def init_cloud_vars():
+def init_cloud_vars() -> None:
     st.session_state.cloud_vars = {
         'forced_cloud': False,
         'app_type': 'desktop',
@@ -372,7 +372,7 @@ def init_cloud_vars():
             st.session_state.cloud_vars['cloud_user_id'] = process_session_user_id()
             st.session_state.cloud_vars['cloud_user_email'] = process_session_user_email()
 
-def init_system_vars():
+def init_system_vars() -> None:
     st.session_state.system_vars = {
         'mode': 'debug',                # 'release'
         'skip_survey': True,
@@ -402,7 +402,7 @@ def init_system_vars():
     }
     st.session_state.system_vars['harmonizable_pipelines'] = st.session_state.system_vars['pipeline_categories']['harmonized']
 
-def init_user_sel():
+def init_user_sel() -> None:
     st.session_state.user_sel = {
         'layout_plots': 'Main',         # 'Sidebar'
         'workflow': None,

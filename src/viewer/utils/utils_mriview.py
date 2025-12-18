@@ -10,6 +10,7 @@ from nibabel.orientations import axcodes2ornt, ornt_transform
 from scipy import ndimage
 import utils.utils_misc as utilmisc
 import utils.utils_user_select as utiluser
+from typing import Any, List, Optional
 
 import streamlit_antd_components as sac
 
@@ -19,7 +20,7 @@ from stqdm import stqdm
 img_views = ["axial", "coronal", "sagittal"]
 VIEW_AXES = [0, 1, 2]
 VIEW_OTHER_AXES = [(1, 2), (0, 2), (0, 1)]
-MASK_COLOR = (0, 255, 0)  # RGB format
+#MASK_COLOR = (0, 255, 0)  # RGB format
 MASK_COLOR = np.array([0.0, 1.0, 0.0])  # RGB format
 OLAY_ALPHA = 0.2
 
@@ -54,9 +55,9 @@ def reorient_nifti(nii_in: Any, ref_orient: str = "LPS") -> Any:
 
     # Find transform from current (approximate) orientation to
     # target, in nibabel orientation matrix and affine forms
-    orient_in = nib.io_orientation(nii_in.affine)
-    orient_out = axcodes2ornt(ref_orient)
-    transform = ornt_transform(orient_in, orient_out)
+    orient_in = nib.io_orientation(nii_in.affine) # type: ignore
+    orient_out = axcodes2ornt(ref_orient) # type: ignore
+    transform = ornt_transform(orient_in, orient_out) # type: ignore
 
     # Apply transform
     nii_reorient = nii_in.as_reoriented(transform)
@@ -138,8 +139,8 @@ def detect_img_bounds(img: np.ndarray) -> np.ndarray:
 
     return img_bounds
 
-@st.cache_data(max_entries=1)  # type:ignore
-def prep_image_and_olay(f_img: np.ndarray, f_mask: Any, list_rois: list, crop_to_mask: bool) -> Any:
+@st.cache_data(max_entries=1)
+def prep_image_and_olay(f_img: str, f_mask: str, list_rois: list, crop_to_mask: bool) -> Any:
     """
     Read images from files and create 3D matrices for display
     """
@@ -157,14 +158,12 @@ def prep_image_and_olay(f_img: np.ndarray, f_mask: Any, list_rois: list, crop_to
     nii_mask = reorient_nifti(nii_mask, ref_orient="IPL")
 
     # Extract image to matrix
-    out_img = nii_img.get_fdata()
-    out_mask = nii_mask.get_fdata()
+    out_img = nii_img.get_fdata() # type: ignore
+    out_mask = nii_mask.get_fdata() # type: ignore
 
     # Rescale image and out_mask to equal voxel size in all 3 dimensions
-    out_img = ndimage.zoom(out_img, nii_img.header.get_zooms(), order=0, mode="nearest")
-    out_mask = ndimage.zoom(
-        out_mask, nii_mask.header.get_zooms(), order=0, mode="nearest"
-    )
+    out_img = ndimage.zoom(out_img, nii_img.header.get_zooms(), order=0, mode="nearest") # type: ignore
+    out_mask = ndimage.zoom(out_mask, nii_mask.header.get_zooms(), order=0, mode="nearest") # type: ignore
 
     # Shift values in out_img to remove negative values
     out_img = out_img - np.min([0, out_img.min()])
@@ -185,29 +184,28 @@ def prep_image_and_olay(f_img: np.ndarray, f_mask: Any, list_rois: list, crop_to
     out_img_out_masked[out_mask == 1] = (
         # WARNING & FIXME:
         # @spirosmaggioros: I don't think this should be like this, something is wrong here with MASK_COLOR * OLAY_ALPHA
-        out_img_out_masked[out_mask == 1] * (1 - OLAY_ALPHA)
-        + MASK_COLOR * OLAY_ALPHA  # type:ignore
+        out_img_out_masked[out_mask == 1] * (1 - OLAY_ALPHA) + MASK_COLOR * OLAY_ALPHA
     )
 
     return out_img, out_mask, out_img_out_masked
 
-@st.cache_data  # type:ignore
-def prep_image(f_img: np.ndarray) -> np.ndarray:
+@st.cache_data
+def prep_image(f_img: np.ndarray) -> Any:
     """
     Read image from file and create 3D matrice for display
     """
 
     # Read nifti
-    nii_img = nib.load(f_img)
+    nii_img = nib.load(f_img) # type: ignore
 
     # Reorient nifti
     nii_img = reorient_nifti(nii_img, ref_orient="IPL")
 
     # Extract image to matrix
-    out_img = nii_img.get_fdata()
+    out_img = nii_img.get_fdata() # type: ignore
 
     # Rescale image to equal voxel size in all 3 dimensions
-    out_img = ndimage.zoom(out_img, nii_img.header.get_zooms(), order=0, mode="nearest")
+    out_img = ndimage.zoom(out_img, nii_img.header.get_zooms(), order=0, mode="nearest") # type: ignore
 
     out_img = out_img.astype(float) / out_img.max()
 
@@ -219,7 +217,7 @@ def prep_image(f_img: np.ndarray) -> np.ndarray:
 
     return out_img
 
-def show_img_slices(img, scroll_axis, sel_axis_bounds, orientation, wimg = None):
+def show_img_slices(img: np.ndarray, scroll_axis: int, sel_axis_bounds: List, orientation: str, wimg: Optional[int] = None) -> None:
     """
     Display 3D mri img slice
     """
@@ -248,7 +246,7 @@ def show_img_slices(img, scroll_axis, sel_axis_bounds, orientation, wimg = None)
         else:
             st.image(img[:, :, slice_index], width=wimg)
 
-def panel_select_var(sel_var_groups, plot_params, var_type, add_none = False):
+def panel_select_var(sel_var_groups: List, plot_params: dict, var_type: str, add_none: bool = False) -> None:
     '''
     User panel to select a variable
     Variables are grouped in categories
@@ -366,7 +364,7 @@ def panel_select_var(sel_var_groups, plot_params, var_type, add_none = False):
                 ## Crop to mask area
                 #plot_params['crop_to_mask'] = st.checkbox("Crop to mask", True, disabled=False)
 
-def panel_view_seg(ulay, olay, plot_params):
+def panel_view_seg(ulay: str, olay: str, plot_params: dict) -> None:
     '''
     Panel to display segmented image overlaid on underlay image
     '''

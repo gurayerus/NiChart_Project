@@ -48,7 +48,7 @@ def update_stats_db(user_id: str, job_type: str, count: int) -> None:
         print("Error:", e)
 
 
-def get_credentials_from_token(id_token: str, user_pool_id: str, identity_pool_id: str, region: str):
+def get_credentials_from_token(id_token: str, user_pool_id: str, identity_pool_id: str, region: str) -> Any:
     cognito_identity = boto3.client('cognito-identity', region_name=region)
 
     # Step 1: Get identity ID using token from the user pool
@@ -70,7 +70,7 @@ def get_credentials_from_token(id_token: str, user_pool_id: str, identity_pool_i
 
     return credentials_response['Credentials']
 
-def invoke_lambda_as_user(credentials, lambda_name, payload, region='us-east-1'):
+def invoke_lambda_as_user(credentials: dict, lambda_name: str, payload: str, region: str='us-east-1') -> Any:
     session = boto3.Session(
         aws_access_key_id=credentials['AccessKeyId'],
         aws_secret_access_key=credentials['SecretKey'],

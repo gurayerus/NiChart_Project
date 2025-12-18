@@ -4,11 +4,13 @@ import utils.utils_session as utilss
 import os
 import pandas as pd
 import streamlit_antd_components as sac
+from pathlib import Path
+from typing import Optional, List, Tuple
 
 from utils.utils_logger import setup_logger
 logger = setup_logger()
 
-def count_files_with_suffix(in_dir, suffixes):
+def count_files_with_suffix(in_dir: str | Path, suffixes: list | tuple) -> int:
     count = 0
     if isinstance(suffixes, list):
         suffixes = tuple(suffixes)    
@@ -19,13 +21,13 @@ def count_files_with_suffix(in_dir, suffixes):
     return count
 
 def build_folder_tree(
-    path,
-    list_dirs = None,
-    list_suff = None,
-    file_limit=5,
-    list_ignore = None,
-    flag_dir_disabled = False,
-):
+    path: str | Path,
+    list_dirs: Optional[List[str]] = None,
+    list_suff: Optional[List[str]] = None,
+    file_limit: int=5,
+    list_ignore: Optional[List[str]] = None,
+    flag_dir_disabled: bool = False,
+) -> Tuple[List[sac.TreeItem], List[str]]:
     tree_items = []
     list_paths = []
     try:
@@ -113,7 +115,7 @@ def build_folder_tree(
 
 
 @st.dialog("File viewer", width='medium')
-def show_sel_item(fname):
+def show_sel_item(fname: str) -> None:
         if fname.endswith('.csv'):
             try:
                 df_tmp = pd.read_csv(fname)
@@ -122,7 +124,7 @@ def show_sel_item(fname):
             except:
                 st.warning(f'Could not read csv file: {fname}')
 
-def data_overview(in_dir):
+def data_overview(in_dir: str | Path) -> None:
     '''
     Show files in data folder
     '''
@@ -163,7 +165,7 @@ def data_overview(in_dir):
         else:
             st.error(f"Folder `{in_dir}` not found.")
 
-def view_subj_list(in_dir):
+def view_subj_list(in_dir: str | Path) -> None:
     fname = 'demog.csv'
     fpath = os.path.join(in_dir, fname)
 
@@ -174,7 +176,7 @@ def view_subj_list(in_dir):
         df = pd.load_csv(fpath)
         st.dataframe(df)
 
-def select_files(in_dir):
+def select_files(in_dir: str | Path) -> None:
     '''
     Merge data csv files
     '''

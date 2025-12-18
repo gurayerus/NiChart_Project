@@ -35,7 +35,7 @@ inject_global_css()
 utilpg.set_global_style()
 
 @st.dialog("Help Information", width="medium")
-def my_help():
+def my_help() -> None:
 
     workflow = st.session_state.workflow
     

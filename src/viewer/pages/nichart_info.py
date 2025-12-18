@@ -16,29 +16,30 @@ import logging
 from stqdm import stqdm
 from utils.utils_logger import setup_logger
 import utils.utils_navig as utilnav
+from pathlib import Path
 
 import streamlit_antd_components as sac
 import streamlit as st
-from streamlit_card import card
+#from streamlit_card import card
 
 #utilpg.config_page()
 utilpg.set_global_style()
 
 st.set_page_config(page_title="NiChart", layout="wide")
 
-def imgfile_to_data(filepath):
+imgdir =  os.path.join(st.session_state.paths['resources'], 'images', 'nichart_logo')
+
+def imgfile_to_data(filepath: str | Path) -> str:
     import base64
 
     with open(filepath, "rb") as f:
-        data = f.read()
-        encoded = base64.b64encode(data)
-    data = "data:image/png;base64," + encoded.decode("utf-8")    
-    return data
+        raw_bytes = f.read()
     
+    encoded_str = base64.b64encode(raw_bytes).decode("utf-8")
+    data = "data:image/png;base64," + encoded_str
+    return data
 
-imgdir =  os.path.join(st.session_state.paths['resources'], 'images', 'nichart_logo')
-
-def show_short_desc(title):
+def show_short_desc(title: str) -> None:
     if title == "NiChart":
         st.markdown("Neuroimaging Chart of **AI-based** imaging biomarkers")
 
@@ -56,7 +57,7 @@ def show_short_desc(title):
         st.markdown("Voxelwise CSF abnormality maps quantifying regional brain atrophy.")
         pass
 
-def show_full_desc(title):
+def show_full_desc(title: str) -> None:
     if title == "NiChart":
         st.markdown(
             """
@@ -149,7 +150,7 @@ def show_full_desc(title):
             """
         )
 
-def card(title, image_path):
+def card(title: str, image_path: str | Path) -> None:
     with st.container(border=True, horizontal_alignment = 'left'):
         st.image(imgfile_to_data(image_path))
         with st.container(border=False, height = 200, horizontal_alignment = 'center'):

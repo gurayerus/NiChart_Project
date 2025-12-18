@@ -8,7 +8,7 @@ import streamlit as st
 import streamlit_antd_components as sac
 
 @st.dialog('Settings', width='medium')
-def edit_settings():
+def edit_settings() -> None:
     with st.form('Select:'):
         list_opts = ["Main", "Sidebar"]
         sel_ind = list_opts.index(st.session_state.layout_plots) 

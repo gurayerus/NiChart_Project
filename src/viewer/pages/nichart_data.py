@@ -36,7 +36,7 @@ if 'instantiated' not in st.session_state or not st.session_state.instantiated:
 #################################
 ## Function definitions
 @st.dialog("Help Information", width="medium")
-def my_help():
+def my_help() -> None:
     tab1, tab2, tab3 = st.tabs(["Project Folder", "Upload Files", "Review Files"])
 
     with tab1:
@@ -126,7 +126,7 @@ def my_help():
             """
         )
 
-def upload_data():
+def upload_data() -> None:
 
     cols = st.columns([6,1,10,1,10])
 

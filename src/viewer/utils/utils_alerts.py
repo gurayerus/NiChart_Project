@@ -1,6 +1,6 @@
 import streamlit as st
 
-def render_alert():
+def render_alert() -> None:
     if "alert_message" in st.session_state:
         alert_type_funcs = {
             'info': st.info,
@@ -19,7 +19,7 @@ def render_alert():
         if "alert_type" in st.session_state:
             del st.session_state.alert_type
 
-def alert(msg, type='info'):
+def alert(msg: str, type: str='info') -> None:
     '''
     This function puts an alert into the session state for rendering at next page load.
     '''

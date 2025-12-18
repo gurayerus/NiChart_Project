@@ -30,7 +30,7 @@ utilpg.config_page()
 utilpg.set_global_style()
 
 @st.dialog("Help Information", width="medium")
-def my_help():
+def my_help() -> None:
     st.write(
         """
         **How to Use This Page**

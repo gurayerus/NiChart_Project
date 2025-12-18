@@ -22,7 +22,7 @@ logger = setup_logger()
 ## Functions to consolidate data
 
 @st.dialog("Participant Information", width='medium')
-def edit_participants(in_file):
+def edit_participants(in_file: str) -> None:
     if not os.path.exists(in_file):
         return
     
@@ -71,7 +71,7 @@ def edit_participants(in_file):
             st.success(f'Updated participants file: {fname}')
             st.rerun()
 
-def update_participant_csv():
+def update_participant_csv() -> None:
     mrid = st.session_state.user_sel['mrid']
     age = st.session_state.user_sel['age']
     sex = st.session_state.user_sel['sex']
@@ -84,7 +84,7 @@ def update_participant_csv():
     df.to_csv(ofile, index=False)
 
 @st.dialog("User csv", width='medium')
-def consolidate_user_csv(fname):
+def consolidate_user_csv(fname: Optional[str]) -> bool:
     
     if fname is None:
         return False
@@ -120,9 +120,11 @@ def consolidate_user_csv(fname):
         utilio.clear_folder(in_dir)
 
         st.toast(f'CSV file consolidated ...')
-        st.rerun()   
+        st.rerun()
 
-def consolidate_nifti():
+    return False
+
+def consolidate_nifti() -> bool:
     logger.debug(f'    Function: consolidate_nifti')
     
     # Get full name for the current file
@@ -179,7 +181,7 @@ def consolidate_nifti():
     return False
 
 @st.dialog("Scan/Participant Info", width='medium')
-def dialog_consolidate_nifti():
+def dialog_consolidate_nifti() -> None:
     logger.debug('    Function: dialog_consolidate_nifti')
     # Detect mrid
     mrid = st.session_state.user_sel['mrid']
@@ -193,12 +195,12 @@ def dialog_consolidate_nifti():
         st.toast(f'Nifti file consolidated ...')
         st.rerun()   
 
-def detect_common_suffix(files):
+def detect_common_suffix(files: list) -> Any:
     reversed_names = [f[::-1] for f in files]
     common_suffix = os.path.commonprefix(reversed_names)[::-1]
     return common_suffix
 
-def consolidate_nifti_multi():
+def consolidate_nifti_multi() -> bool:
     logger.debug(f'    Function: consolidate_nifti')
     
     # Detect common suffix
@@ -254,7 +256,7 @@ def consolidate_nifti_multi():
     return False
 
 @st.dialog("Scan/Participant Info", width='medium')
-def dialog_consolidate_nifti_multiple():
+def dialog_consolidate_nifti_multiple() -> None:
     logger.debug('    Function: dialog_consolidate_nifti_multiple')
    
     if consolidate_nifti_multi():
@@ -262,7 +264,7 @@ def dialog_consolidate_nifti_multiple():
         st.rerun()   
                    
 @st.dialog("Dicom extraction", width='medium')
-def dialog_extract_dicoms(in_dir, out_dir):
+def dialog_extract_dicoms(in_dir: str, out_dir: str) -> None:
     if st.session_state.dicoms['df_dicoms'] is None:
         df_dicoms = utildcm.detect_series(in_dir)
         st.session_state.dicoms['df_dicoms'] = df_dicoms
@@ -293,7 +295,7 @@ def dialog_extract_dicoms(in_dir, out_dir):
     if consolidate_nifti():
         st.rerun()    
 
-def upload_file_single_subject(in_file):
+def upload_file_single_subject(in_file: Optional[Any]) -> None:
     '''
     Copy file to output folder
     '''
@@ -329,7 +331,7 @@ def upload_file_single_subject(in_file):
     else:
         st.warning('Input file type mismatch: should be one of .nii.gz, .nii, .csv or .zip')
 
-def upload_file_multi_subject(in_file):
+def upload_file_multi_subject(in_file: Optional[Any]) -> None:
     '''
     Copy file to output folder
     '''
@@ -362,7 +364,7 @@ def upload_file_multi_subject(in_file):
     else:
         st.warning('Input file type mismatch: should be .zip or .csv')
 
-def upload_files_single_subject(in_files):
+def upload_files_single_subject(in_files: list) -> None:
     '''
     Copy files to output folder
     '''
@@ -386,7 +388,7 @@ def upload_files_single_subject(in_files):
 
     dialog_extract_dicoms(d_out, tmp_dir)
 
-def upload_files_multi_subject(in_files):
+def upload_files_multi_subject(in_files: list) -> None:
     '''
     Copy files to output folder
     '''
@@ -411,7 +413,7 @@ def upload_files_multi_subject(in_files):
     ## Multiple nifti images
     dialog_consolidate_nifti_multiple()
        
-def view_mri(fname):
+def view_mri(fname: str) -> None:
     """
     Panel for viewing a nifti scan
     """
@@ -440,7 +442,7 @@ def view_mri(fname):
 ##############################################################
 ## Main panels
 
-def panel_project_folder():
+def panel_project_folder() -> None:
     '''
     Panel to select project folder
     '''
@@ -503,7 +505,7 @@ def panel_project_folder():
                 st.toast(f"Files in project {st.session_state.user_sel['prj_name']} have been successfully deleted.")
                 utilss.update_project(st.session_state.user_sel['prj_name'])
         
-def panel_upload_single_subject():
+def panel_upload_single_subject() -> None:
     '''
     Upload user data to target folder
     '''
@@ -544,19 +546,19 @@ def panel_upload_single_subject():
         label='', index=0, align='left', size='sm', radius='sm', multiple=False, 
         color='cyan', return_index = True
     )
-    flag_multi=False
+    flag_multi: bool=False
     if sel_opt == 1:
         flag_multi=True
         
     logger.debug(f'**** flag multi set to : {flag_multi}')
-        
+
     with st.form(key='my_form', clear_on_submit=True, border=False):
                 
         sel_files = st.file_uploader(
-            "Input files or folders",
+            label="Input files or folders",
+            accept_multiple_files=bool(flag_multi),
             key="_uploaded_input",
-            accept_multiple_files=flag_multi,
-            label_visibility="collapsed"
+            label_visibility="collapsed"  # type: ignore
         )
         
         flag_submit = False
@@ -573,7 +575,7 @@ def panel_upload_single_subject():
         else:
             upload_files_single_subject(sel_files)
 
-def generate_template_csv():
+def generate_template_csv() -> pd.DataFrame:
     mod_dirs = {mod: os.path.join(st.session_state.paths['project'], mod) for mod in ['t1', 't2', 'fl', 'dti', 'fmri']}
     dir_dict = {'T1': mod_dirs['t1'],
                             'T2': mod_dirs['t2'],
@@ -598,7 +600,7 @@ def generate_template_csv():
     
     return df
 
-def panel_upload_multi_subject():
+def panel_upload_multi_subject() -> None:
     '''
     Upload user data to target folder
     '''
@@ -629,19 +631,6 @@ def panel_upload_multi_subject():
                """
            )
             
-    # Upload data
-    #sel_opt = sac.chip(
-    #    ['Single (.nii.gz, .nii, .zip, .csv)', 'Multiple (dicom files)'],
-    #    label='', index=0, align='left', size='sm', radius='sm', multiple=False, 
-    #    color='cyan', return_index = True
-    #)
-    #sel_opt = sac.chip(
-    #    ['T1 scans (.nii.gz, .nii, .zip)', 'FLAIR scans (.nii.gz, .nii, .zip)',
-    #     'DICOM images (.dcm, .zip)', 'Participants CSV (.csv)'],
-    #     label='', index=0, align='left', size='sm', radius='sm', multiple=False,
-    #     color='cyan', return_index = True
-    #)
-
     with st.popover("T1 Scans"):
         t1_out_dir = os.path.join(st.session_state.paths['prj_dir'], 't1')
         utilio.upload_multiple_files(out_dir=t1_out_dir)
@@ -690,6 +679,10 @@ def panel_upload_multi_subject():
             accept_multiple_files=False,
             label_visibility="collapsed"
         )
+        
+        if csv_file is None:
+            return
+        
         flag_csv_submit = False
         with st.container(horizontal=True, horizontal_alignment="center"):
             csv_submitted = st.button("Submit")
@@ -713,7 +706,7 @@ def panel_upload_multi_subject():
     #    
     #logger.debug(f'**** flag multi set to : {flag_multi}')
 
-def panel_view_files():
+def panel_view_files() -> None:
     '''
     Show files in data folder
     '''
