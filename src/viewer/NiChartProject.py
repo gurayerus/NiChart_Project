@@ -6,7 +6,6 @@ import utils.utils_pages as utilpg
 import utils.utils_session as utilss
 
 from PIL import Image
-#from st_pages import add_page_title, get_nav_from_toml
 
 nicon = Image.open("../resources/nichart1.png")
 
@@ -47,7 +46,7 @@ except SystemExit as e:
 
 if args.cloud:
     st.session_state.cloud_vars['app_type'] = "CLOUD"
-    st.session_state.cloud_vars['forced_cloud'] = True
+    st.session_state.forced_cloud = True
 
 pages = {
     "Home": [

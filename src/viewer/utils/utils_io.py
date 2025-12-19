@@ -794,31 +794,31 @@ def preview_project_folder(project: str) -> None:
         in_dir = get_path_for_project(project)
         utildv.data_overview(in_dir)
 
-def panel_select_existing_with_preview(out_dir: str) -> None:
-    left, right = st.columns([1, 2], gap='large')
+#def panel_select_existing_with_preview(out_dir: str) -> None:
+    #left, right = st.columns([1, 2], gap='large')
     
-    list_projects = get_subfolders(out_dir)
-    curr_project = st.session_state.project
-    sel_project = curr_project
-    with left:
-        st.markdown("### Select Project")
-        if len(list_projects) > 0:
-            sel_ind = list_projects.index(curr_project)
-            sel_project = st.selectbox(
-                "Select Existing Project",
-                options = list_projects,
-                index = sel_ind,
-                label_visibility = 'collapsed',
-            )
-    with right:
-        st.markdown("### Preview Project Data")
-        preview_project_folder(sel_project)
+    #list_projects = get_subfolders(out_dir)
+    #curr_project = st.session_state.project
+    #sel_project = curr_project
+    #with left:
+        #st.markdown("### Select Project")
+        #if len(list_projects) > 0:
+            #sel_ind = list_projects.index(curr_project)
+            #sel_project = st.selectbox(
+                #"Select Existing Project",
+                #options = list_projects,
+                #index = sel_ind,
+                #label_visibility = 'collapsed',
+            #)
+    #with right:
+        #st.markdown("### Preview Project Data")
+        #preview_project_folder(sel_project)
 
-    if sel_project is None:
-        return
-    else:
-        utilss.update_project(sel_project)
-        st.success(f"Selected project {sel_project}")
+    #if sel_project is None:
+        #return
+    #else:
+        #utilss.update_project(sel_project)
+        #st.success(f"Selected project {sel_project}")
 
 def validate_project_name(string: str) -> bool:
     """

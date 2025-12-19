@@ -70,12 +70,22 @@ def update_project(sel_project: Optional[str]) -> None:
     except:
         st.error(f'Could not create project folder: {p_prj}')
         return
-    
-    st.session_state.user_sel['prj_name'] = sel_project
-    st.session_state.user_sel['project_selected_explicitly'] = True
-    st.session_state.paths['prj_dir'] = p_prj
 
+    # Set project name
+    st.session_state.prj_name = sel_project
+    st.session_state.paths['prj_dir'] = p_prj
+    
+    ## FIXME
+    #reset_dicoms()
+    #init_scan()
+    #init_participant()
+    
     st.toast(f'Updated project folder {sel_project}')
+    st.session_state.user_sel['project'] = sel_project
+    st.session_state.user_sel['project_selected_explicitly'] = True
+    st.session_state.paths['project'] = p_prj
+
+    st.session_state.paths['curr_data'] = st.session_state.paths['prj_dir']
 
 #################################################
 ## Misc utility functions
@@ -165,19 +175,33 @@ def init_paths() -> None:
     # Resources
     p_root = os.path.dirname(os.path.dirname(os.getcwd()))
     p_init = p_root
-    p_resources = os.path.join(p_root, "resources")
-    p_centiles = os.path.join(p_resources, "reference_data", "centiles")
-    p_sample = os.path.join(p_root, "sample_datasets", "demo_dataset")    
-    p_proc_def = os.path.join(p_resources, "process_definitions")
+    p_resources = os.path.join(
+        p_root, "resources"
+    )
+    p_centiles = os.path.join(
+        p_resources, "reference_data", "centiles"
+    )
+    #p_sample = os.path.join(
+        #p_root, "sample_datasets", "demo_dataset_IXI"
+    #)    
+    p_sample = os.path.join(
+        p_root, "sample_datasets", "demo_dataset"
+    )    
+    p_proc_def = os.path.join(
+        p_resources, "process_definitions"
+    )
     
     # Output
     user_id = ''
     if st.session_state.cloud_vars['has_cloud_session']:
         user_id = st.session_state.cloud_user_id
-        p_out = os.path.join("/fsx/fsx/", user_id)
+        p_out = os.path.join(
+            "/fsx/fsx/", user_id
+        )
     else:
-        p_out = os.path.join(p_root, 'output_folder', user_id
-                             )
+        p_out = os.path.join(
+            p_root, 'output_folder', user_id
+        )
     if not os.path.exists(p_out):
         os.makedirs(p_out)
     
@@ -189,7 +213,9 @@ def init_paths() -> None:
         os.makedirs(p_prj)
 
     st.session_state.dicts = {
-        "muse_derived": os.path.join(p_resources, "MUSE", "list_MUSE_mapping_derived.csv"),
+        "muse_derived": os.path.join(
+            p_resources, "MUSE", "list_MUSE_mapping_derived.csv"
+        ),
         "muse_all": os.path.join(p_resources, "MUSE", "list_MUSE_all.csv"),
         "muse_sel": os.path.join(p_resources, "MUSE", "list_MUSE_primary.csv"),
     }
@@ -217,9 +243,22 @@ def init_paths() -> None:
     if host_out_dir is not None:
         st.session_state.paths['host_out_dir'] = host_out_dir
     
-    ## FIXME : set init folder to test folder outside repo
-    st.session_state.paths["init"] = os.path.join(st.session_state.paths["root"], "test_data")
+    # List of output folders
+    st.session_state.out_dirs = [
+        'participants',
+        'dicoms',
+        't1', 't2', 'fl', 'fmri', 'dti',
+        'dlmuse_seg', 'dlmuse_vol',
+        'dlwmls', 'spare',
+    ]
+    
+    ############
+    # FIXME : set init folder to test folder outside repo
+    st.session_state.paths["init"] = os.path.join(
+        st.session_state.paths["root"], "test_data"
+    )
     st.session_state.paths["file_search_dir"] = st.session_state.paths["init"]
+    ############
 
 def init_pipeline_definitions() -> None:
     plist = os.path.join(
