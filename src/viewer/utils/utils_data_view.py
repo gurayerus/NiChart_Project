@@ -36,8 +36,8 @@ def build_folder_tree(
 
         # Sort using given list
         if list_dirs is not None:
-            e1 = [x for x in st.session_state.out_dirs if x in entries]
-            e2 = [x for x in entries if x not in st.session_state.out_dirs]
+            e1 = [x for x in st.session_state.constants['list_out_folders'] if x in entries]
+            e2 = [x for x in entries if x not in st.session_state.constants['list_out_folders']]
             entries = e1 + e2
 
         # Remove given items
@@ -143,7 +143,7 @@ def data_overview(in_dir: str | Path) -> None:
         st.markdown(f"##### 📂 `{dname}`")
 
         if os.path.exists(in_dir):
-            tree_items, list_paths = build_folder_tree(in_dir, st.session_state.out_dirs)
+            tree_items, list_paths = build_folder_tree(in_dir, st.session_state.constants['list_out_folders'])
             selected = sac.tree(
                 items=tree_items,
                 #label='Project Folder',
@@ -186,7 +186,7 @@ def select_files(in_dir: str | Path) -> None:
     st.markdown(f"##### 📂 `{in_dir}`")
     tree_items, list_paths = build_folder_tree(
         in_dir,
-        st.session_state.out_dirs,
+        st.session_state.constants['list_out_folders'],
         ['.csv'],
         5,
         ['data_merged'],

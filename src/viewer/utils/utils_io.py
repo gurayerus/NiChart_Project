@@ -242,7 +242,7 @@ def upload_multiple_files(out_dir: str) -> None:
     #Panel for uploading multiple input files or folder(s)
     #"""
     ## Check if data exists
-    #if st.session_state.cloud_vars['app_type'] == "cloud":
+    #if st.session_state.app_state['app_type'] == "cloud":
         ## Upload data
         #upload_folder(
             #out_dir,
@@ -251,7 +251,7 @@ def upload_multiple_files(out_dir: str) -> None:
             #"Input files can be uploaded as a folder, multiple files, or a single zip file",
         #)
 
-    #else:  # st.session_state.cloud_vars['app_type'] == 'desktop'
+    #else:  # st.session_state.app_state['app_type'] == 'desktop'
         #if not os.path.exists(out_dir):
             #try:
                 #os.symlink(sel_dir, out_dir)

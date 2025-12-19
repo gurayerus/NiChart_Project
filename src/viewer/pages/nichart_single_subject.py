@@ -61,7 +61,7 @@ with cols[1]:
 utilnav.main_navig(None, None, 'Data', 'pages/nichart_data.py')
 
 # Show session state vars
-if st.session_state.system_vars['mode'] == 'debug':
+if st.session_state.app_state['mode'] == 'debug':
     utilses.disp_session_state()
 
 

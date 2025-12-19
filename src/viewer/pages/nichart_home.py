@@ -52,8 +52,8 @@ html_style = '''
     </style>
     '''
 st.markdown(html_style, unsafe_allow_html=True)
-if st.session_state.cloud_vars['has_cloud_session']:
-    user_email = st.session_state.cloud_vars['cloud_user_email']
+if st.session_state.app_state['has_cloud_session']:
+    user_email = st.session_state.app_state['cloud_user_email']
     with st.container():
         st.markdown('<div class="floating"></div>', unsafe_allow_html=True)
         col1, col2 = st.columns([6, 1])
@@ -74,8 +74,8 @@ if st.session_state.cloud_vars['has_cloud_session']:
 
 # Redirect users to survey page until it is completed or otherwise temporarily skipped
 if not utils_survey.is_survey_completed():
-    if 'skip_survey' in st.session_state.system_vars:
-        if not st.session_state.system_vars['skip_survey']:
+    if 'skip_survey' in st.session_state.app_state:
+        if not st.session_state.app_state['skip_survey']:
             print("Activating survey page.")
             st.switch_page("pages/survey.py")
     else:

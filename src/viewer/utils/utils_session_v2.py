@@ -193,7 +193,7 @@ def init_paths() -> None:
     
     # Output
     user_id = ''
-    if st.session_state.cloud_vars['has_cloud_session']:
+    if st.session_state.app_state['has_cloud_session']:
         user_id = st.session_state.cloud_user_id
         p_out = os.path.join(
             "/fsx/fsx/", user_id
@@ -352,8 +352,8 @@ def init_muse_roi_def() -> None:
         'muse' : muse
     }
 
-def init_cloud_vars() -> None:
-    st.session_state.cloud_vars = {
+def init_app_state() -> None:
+    st.session_state.app_state = {
         'forced_cloud': False,
         'app_type': 'desktop',
         'has_cloud_session': False,
@@ -364,13 +364,13 @@ def init_cloud_vars() -> None:
     
     # Update cloud vars if app type is 'cloud'
     if os.getenv("NICHART_FORCE_CLOUD", "0") == "1":
-        st.session_state.cloud_vars['forced_cloud'] = True
-        st.session_state.cloud_vars['app_type'] = "cloud"
-        st.session_state.cloud_vars['cloud_session_token'] = process_session_token()
-        if st.session_state.cloud_vars['cloud_session_token']:
-            st.session_state.cloud_vars['has_cloud_session'] = True
-            st.session_state.cloud_vars['cloud_user_id'] = process_session_user_id()
-            st.session_state.cloud_vars['cloud_user_email'] = process_session_user_email()
+        st.session_state.app_state['forced_cloud'] = True
+        st.session_state.app_state['app_type'] = "cloud"
+        st.session_state.app_state['cloud_session_token'] = process_session_token()
+        if st.session_state.app_state['cloud_session_token']:
+            st.session_state.app_state['has_cloud_session'] = True
+            st.session_state.app_state['cloud_user_id'] = process_session_user_id()
+            st.session_state.app_state['cloud_user_email'] = process_session_user_email()
 
 def init_system_vars() -> None:
     st.session_state.system_vars = {
@@ -422,7 +422,7 @@ def init_session_state() -> None:
     if "instantiated" not in st.session_state:
         
         # Set initial session variables
-        init_cloud_vars()
+        init_app_state()
         init_system_vars()
         init_user_sel()
         init_paths()

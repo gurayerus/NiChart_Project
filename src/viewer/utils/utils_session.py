@@ -85,10 +85,10 @@ def disp_session_state() -> None:
     Show session state variables
     '''
     if '_debug_flag_show' not in st.session_state:
-        st.session_state['_debug_flag_show'] = st.session_state.system_vars['flag_show_session']
+        st.session_state['_debug_flag_show'] = st.session_state.user_sel['flag_show_session']
 
     def update_val() -> None:
-        st.session_state.system_vars['flag_show_session'] = st.session_state['_debug_flag_show']
+        st.session_state.user_sel['flag_show_session'] = st.session_state['_debug_flag_show']
 
     sac.divider(label='Debug', icon = 'gear',  align='center', color='gray')
     st.checkbox(
@@ -97,7 +97,7 @@ def disp_session_state() -> None:
         on_change = update_val
     )
 
-    if st.session_state.system_vars['flag_show_session']:
+    if st.session_state.user_sel['flag_show_session']:
         with st.container(border=True):
             st.markdown('##### Session State:')
             list_items = sorted([x for x in st.session_state.keys() if not str(x).startswith('_')])
@@ -110,9 +110,9 @@ def disp_session_state() -> None:
                 # default=st.session_state['debug']['sel_vars'],
                 label_visibility="collapsed",
             )
-            st.session_state.system_vars['sel_session_vars'] = st.session_state['_debug_sel_vars']
+            st.session_state.user_sel['sel_session_vars'] = st.session_state['_debug_sel_vars']
 
-            for sel_var in st.session_state.system_vars['sel_session_vars']:
+            for sel_var in st.session_state.user_sel['sel_session_vars']:
                 st.markdown('➤ ' + sel_var + ':')
                 st.write(st.session_state[sel_var])
     #print('FIXME: This is bypassed for now ...')
@@ -121,7 +121,7 @@ def copy_test_folders() -> None:
     '''
     Copy demo folders into user folders as needed
     '''
-    if st.session_state.system_vars['has_cloud_session']:
+    if st.session_state.app_state['has_cloud_session']:
         # Copy demo dirs to user folder (TODO: make this less hardcoded)
         demo_dir_paths = [
             os.path.join(
@@ -172,7 +172,7 @@ def init_paths() -> None:
     
     # Output
     user_id = ''
-    if st.session_state.cloud_vars['has_cloud_session']:
+    if st.session_state.app_state['has_cloud_session']:
         user_id = st.session_state.cloud_user_id
         p_out = os.path.join("/fsx/fsx/", user_id)
     else:
@@ -221,13 +221,10 @@ def init_paths() -> None:
     st.session_state.paths["init"] = os.path.join(st.session_state.paths["root"], "test_data")
     st.session_state.paths["file_search_dir"] = st.session_state.paths["init"]
 
-def init_pipeline_definitions() -> None:
-    plist = os.path.join(
-        st.session_state.paths['resources'], 'pipelines', 'list_pipelines.csv'
-    )
-    st.session_state.pipelines = pd.read_csv(plist)
-    
-def init_reference_data() -> None:
+def init_refdata() -> None:
+    '''
+    Initialize reference data
+    '''
     indir = os.path.join(
         st.session_state.paths['resources'], 'reference_data', 'sample1'
     )
@@ -235,17 +232,21 @@ def init_reference_data() -> None:
     fl = os.path.join(indir, 'fl', 'sample1_FL.nii.gz')
     dlmuse = os.path.join(indir, 'dlmuse', 'sample1_T1_DLMUSE.nii.gz')
     dlwmls = os.path.join(indir, 'dlwmls', 'sample1_FL_DLWMLS.nii.gz')
-    st.session_state.ref_data = {
+    refdata = {
         't1' : t1,
         'fl' : fl,
         'dlmuse' : dlmuse,
         'dlwmls' : dlwmls
     }
+    
+    # Save to session state
+    st.session_state.refdata = refdata
 
-def init_var_groups() -> None:
+def init_dicts() -> None:
     '''
-    Read variable groups to a dataframe
+    Initialize data dictionaries (atlas roi def.s etc.)
     '''
+    ## Dictionary of variable groups
     f_vars = os.path.join(
         st.session_state.paths['resources'], 'lists', 'dict_var_groups.yaml'
     )
@@ -264,21 +265,11 @@ def init_var_groups() -> None:
             'atlas': group_info.get('atlas'),
             'values': str_values
         })
+    df_vars = pd.DataFrame(rows)
 
-    df = pd.DataFrame(rows)
-    st.session_state.dicts['df_var_groups'] = df
-
-def init_dicts() -> None:
-    '''
-    Initialize all data dictionaries (atlas roi def.s etc.)
-    '''
     # MUSE dictionaries
     muse = utilroi.read_muse_dicts()
-    st.session_state.dicts = {
-        'muse': muse
-    }
 
-def init_muse_roi_def() -> None:
     # Paths to roi lists
     muse: dict[str, Any]  = {
         'path': os.path.join(st.session_state.paths['resources'], 'lists', 'MUSE'),
@@ -286,7 +277,7 @@ def init_muse_roi_def() -> None:
         'list_derived' : 'MUSE_mapping_derivedROIs.csv',
         'list_groups' : 'MUSE_ROI_Groups_v1.csv',
     }
-    
+        
     # Read roi lists to dictionaries
     df_tmp = pd.read_csv(
         os.path.join(muse['path'], muse['list_rois']),
@@ -308,63 +299,81 @@ def init_muse_roi_def() -> None:
     muse['df_derived'] = df_derived
     muse['df_groups'] = df_groups
     
-    # Read MUSE ROI lists
-    st.session_state.rois = {
-        'muse' : muse
+    st.session_state.dicts = {
+        'df_var_groups': df_vars,
+        'muse': muse,
     }
 
-def init_cloud_vars() -> None:
-    st.session_state.cloud_vars = {
+def init_app_state() -> None:
+    '''
+    Initialize variables that keep info about the app
+    '''
+    app_state = {
+        'mode': 'debug',                # 'release'
         'forced_cloud': False,
         'app_type': 'desktop',
         'has_cloud_session': False,
         'cloud_session_token': None,
         'cloud_user_id': None,
         'cloud_user_email': None,
+        'skip_survey': True,
     }
     
-    # Update cloud vars if app type is 'cloud'
+    # Updates if app type is 'cloud'
     if os.getenv("NICHART_FORCE_CLOUD", "0") == "1":
-        st.session_state.cloud_vars['forced_cloud'] = True
-        st.session_state.cloud_vars['app_type'] = "cloud"
-        st.session_state.cloud_vars['cloud_session_token'] = process_session_token()
-        if st.session_state.cloud_vars['cloud_session_token']:
-            st.session_state.cloud_vars['has_cloud_session'] = True
-            st.session_state.cloud_vars['cloud_user_id'] = process_session_user_id()
-            st.session_state.cloud_vars['cloud_user_email'] = process_session_user_email()
+        app_state['forced_cloud'] = True
+        app_state['app_type'] = "cloud"
+        app_state['cloud_session_token'] = process_session_token()
+        if app_state['cloud_session_token']:
+            app_state['has_cloud_session'] = True
+            app_state['cloud_user_id'] = process_session_user_id()
+            app_state['cloud_user_email'] = process_session_user_email()
 
-def init_system_vars() -> None:
-    st.session_state.system_vars = {
-        'mode': 'debug',                # 'release'
-        'skip_survey': True,
-        'pipeline_colors': [
+    st.session_state.app_state = app_state
+    
+def init_pipelines() -> None:
+    '''
+    Initialize pipeline info
+    '''
+    # Read list of pipelines
+    p_list = os.path.join(
+        st.session_state.paths['resources'], 'pipelines', 'list_pipelines.csv'
+    )
+    df_p = pd.read_csv(p_list)
+
+    # Init other vars
+    pipelines = {
+        'colors': [
             'red', 'pink', 'grape', 'violet', 'indigo', 'blue',
             'cyan', 'teal', 'green', 'lime', 'yellow', 'orange',
         ],
-        'pipeline_categories': utiltl.overall_pipeline_category_listing(),
-        'pipeline_requirements': utiltl.overall_pipeline_requirements_listing(),
+        'categories': utiltl.overall_pipeline_category_listing(),
+        'requirements': utiltl.overall_pipeline_requirements_listing(),
         'do_harmonize': False,
-        'nifti_dicom_upload_mode': None,
-        'list_mods': ["T1", "T2", "FL", "DTI", "fMRI"],
+        'desc': df_p
+    }
+    pipelines['harmonizable'] = pipelines['categories']['harmonized']
+
+    # Save to session state
+    st.session_state.pipelines = pipelines
+
+def init_constants() -> None:
+    '''
+    Initialize constants that will not be changed by the user
+    '''
+    constants = {
         'mean_icv': 1430000,            # Average ICV estimated from a large sample
         'harm_min_samples': 30,
-        'icon_thumb': {         # Icons for panels
-            False: ":material/thumb_down:",
-            True: ":material/thumb_up:",
-        },
-        'flag_show_session': False,
-        'sel_session_vars': [],
-        'nicon': Image.open("../resources/nichart1.png"),
-        'forced_cloud0': None,
-        'app_type': None,
-        'has_cloud_session': False,
-        'cloud_session_token': None,
-        'cloud_user_id': None,
+        'list_out_folders': ['t1', 'participants', 'dlmuse']
     }
-    st.session_state.system_vars['harmonizable_pipelines'] = st.session_state.system_vars['pipeline_categories']['harmonized']
+    
+    st.session_state.constants = constants
 
-def set_defaults_user_sel() -> None:
-    st.session_state.user_sel = {
+def init_user_sel() -> None:
+    '''
+    Initialize variables that will be selected by the user
+    '''
+    user_sel = {
         'layout_plots': 'Main',         # 'Sidebar'
         'workflow': None,
         'prj_name': 'user_default',
@@ -374,7 +383,11 @@ def set_defaults_user_sel() -> None:
         'age': None,
         'sex': None,
         'roi': None,
+        'flag_show_session': False
     }
+
+    # Save to session state
+    st.session_state.user_sel = user_sel
 
 def init_session_state() -> None:
     '''
@@ -383,26 +396,17 @@ def init_session_state() -> None:
     if "instantiated" not in st.session_state:
         
         # Set initial session variables
-        init_cloud_vars()
-        init_system_vars()
+        init_constants()
+        init_app_state()
         init_user_sel()
         init_paths()
         init_dicts()
-        init_var_groups()
+        init_pipelines()
+        init_refdata()
 
-        # Update project variables
+        # Set data
         update_project(st.session_state.user_sel['prj_name'])
-
-        # Copy test data to user folder
         copy_test_folders()
-
-        # Init variables for different pages 
-        init_muse_roi_def()
-        init_reference_data()
-
-        init_pipeline_definitions()
-        reset_dicoms()
         
         # Set flag
         st.session_state.instantiated = True
-

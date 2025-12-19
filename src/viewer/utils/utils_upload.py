@@ -723,7 +723,7 @@ def panel_view_files() -> None:
     with st.container(border = None, height = 400):
         tree_items, list_paths = utildv.build_folder_tree(
             st.session_state.paths['prj_dir'],
-            st.session_state.out_dirs,
+            st.session_state.constants['list_out_folders'],
             None,
             3,
             ['user_upload']
