@@ -52,7 +52,7 @@ def my_help() -> None:
             """
         )
 
-    if st.session_state.workflow == 'single_subject':
+    if st.session_state.user_sel['workflow'] == 'single_subject':
         with tab2:
             st.write(
                 """
@@ -77,7 +77,7 @@ def my_help() -> None:
                 """
             )
 
-    if st.session_state.workflow == 'multi_subject':
+    if st.session_state.user_sel['workflow'] == 'multi_subject':
         with tab2:
             st.write(
                 """
@@ -134,9 +134,9 @@ def upload_data() -> None:
         utilup.panel_project_folder()
 
     with cols[2]:
-        if st.session_state.workflow == 'single_subject':
+        if st.session_state.user_sel['workflow'] == 'single_subject':
             utilup.panel_upload_single_subject()
-        elif st.session_state.workflow == 'multi_subject':
+        elif st.session_state.user_sel['workflow'] == 'multi_subject':
             utilup.panel_upload_multi_subject()
         else: # default to multi
             utilup.panel_upload_multi_subject()
@@ -151,7 +151,7 @@ def upload_data() -> None:
 with st.container(horizontal=True, horizontal_alignment="center"):
     st.markdown("<h4 style=color:#3a3a88;'>Upload Data\n\n</h1>", unsafe_allow_html=True, width='content')
 
-if st.session_state.workflow == 'ref_data':
+if st.session_state.user_sel['workflow'] == 'ref_data':
     st.info('''
         You’ve selected the **Reference Data** workflow. This option doesn’t require data upload.
         - If you meant to analyze your data, please go back and choose a different workflow.
@@ -168,7 +168,7 @@ else:
     upload_data()
 
     utilnav.main_navig(
-        'Info', f'pages/nichart_{st.session_state.workflow}.py',
+        'Info', f'pages/nichart_{st.session_state.user_sel['workflow']}.py',
         'Pipelines', 'pages/nichart_pipelines.py',
         utilset.edit_settings, my_help
     )

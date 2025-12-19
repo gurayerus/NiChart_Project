@@ -9,13 +9,9 @@ import utils.utils_pages as utilpg
 import utils.utils_processes as utilprc
 import utils.utils_session as utilses
 import utils.utils_io as utilio
-import utils.utils_plots as utilpl
-import utils.utils_mriview as utilmri
-import utils.utils_data_view as utildv
-import gui.utils_results as utilres
 from utils.utils_styles import inject_global_css 
 import pandas as pd
-import gui.utils_navig as utilnav
+import utils.utils_navig as utilnav
 import utils.utils_settings as utilset
 
 from streamlit_image_select import image_select
@@ -37,7 +33,7 @@ utilpg.set_global_style()
 @st.dialog("Help Information", width="medium")
 def my_help() -> None:
 
-    workflow = st.session_state.workflow
+    workflow = st.session_state.user_sel['workflow']
     
     if workflow == 'ref_data':
         st.write("""
@@ -69,9 +65,13 @@ if 'instantiated' not in st.session_state or not st.session_state.instantiated:
 with st.container(horizontal=False, horizontal_alignment="center"):
     st.markdown("<h4 style=color:#3a3a88;'>View Results\n\n</h1>", unsafe_allow_html=True, width='content')
 
-utilres.panel_results()
+try:
+    import gui.utils_results as utilres
+    utilres.panel_results()
+except:
+    st.warning('Could not detect gui package!')
 
-if st.session_state.workflow == 'ref_data':
+if st.session_state.user_sel['workflow'] == 'ref_data':
     utilnav.main_navig(
         'Info', 'pages/nichart_ref_data.py',
         'Home', 'pages/nichart_home.py',

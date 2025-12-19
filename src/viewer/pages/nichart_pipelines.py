@@ -47,7 +47,7 @@ if 'instantiated' not in st.session_state or not st.session_state.instantiated:
 
 utilpipe.panel_pipelines()
 
-if st.session_state.workflow == 'Reference Data':
+if st.session_state.user_sel['workflow'] == 'Reference Data':
     utilnav.main_navig(
         'Home', 'pages/nichart_ref_data.py',
         'Results', 'pages/nichart_results.py',
@@ -61,7 +61,7 @@ else:
     )
 
 # Show session state vars
-if st.session_state.mode == 'debug':
+if st.session_state.system_vars['mode'] == 'debug':
     utilses.disp_session_state()
 
 

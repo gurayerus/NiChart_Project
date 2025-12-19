@@ -149,7 +149,7 @@ def pipeline_runner_menu(enabled_pnames: List, sel: Optional[str] = None) -> Non
     sel_name = utiltl.get_pipeline_name_by_label(sel_method)
     st.success(f'Selected pipeline: {sel_name}')
     harmonize = False
-    if 'subject_type' not in st.session_state or st.session_state.subject_type == 'multi':
+    if 'subject_type' not in st.session_state or st.session_state.user_sel['subject_type'] == 'multi':
         if utiltl.pipeline_is_harmonizable(sel_method):
             harmonize = st.checkbox("Harmonize to reference data? (Requires >= 30 scans)")
     st.session_state.user_sel['flag_harmonize'] = harmonize
@@ -275,7 +275,7 @@ def pipeline_menu() -> None:
 
 def panel_pipelines() -> None:
 
-    workflow = st.session_state.workflow
+    workflow = st.session_state.user_sel['workflow']
 
     if workflow is None:
         st.info('Please select a Workflow!')
@@ -284,7 +284,7 @@ def panel_pipelines() -> None:
     with st.container(horizontal=True, horizontal_alignment="center"):
         st.markdown("<h4 style=color:#3a3a88;'>Select and Run Pipeline\n\n</h1>", unsafe_allow_html=True, width='content')
 
-    if st.session_state.workflow == 'ref_data':
+    if st.session_state.user_sel['workflow'] == 'ref_data':
         st.info('''
             You’ve selected the **Reference Data** workflow. This option doesn’t require pipeline selection.
             - If you meant to analyze your data, please go back and choose a different workflow.

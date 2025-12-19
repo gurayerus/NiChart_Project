@@ -30,8 +30,8 @@ utilpg.set_global_style()
 
 ###############################
 # Set session state variables for the reference data workflow
-st.session_state.workflow = 'multi_subject'
-st.session_state.subject_type = 'multi'
+st.session_state.user_sel['workflow'] = 'multi_subject'
+st.session_state.user_sel['subject_type'] = 'multi'
 
 st.session_state.paths['curr_data'] = st.session_state.paths['prj_dir'] 
 

@@ -1,5 +1,5 @@
 import logging
-from Typing import Any
+from typing import Any
 
 def setup_logger(name: str="streamlit_app") -> Any:
     logger = logging.getLogger(name)

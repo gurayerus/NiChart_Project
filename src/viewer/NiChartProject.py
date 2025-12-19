@@ -46,8 +46,8 @@ except SystemExit as e:
     os._exit(exit_code)
 
 if args.cloud:
-    st.session_state.app_type = "CLOUD"
-    st.session_state.forced_cloud = True
+    st.session_state.cloud_vars['app_type'] = "CLOUD"
+    st.session_state.cloud_vars['forced_cloud'] = True
 
 pages = {
     "Home": [

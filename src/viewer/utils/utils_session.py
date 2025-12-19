@@ -81,8 +81,8 @@ def update_project(sel_project: Optional[str]) -> None:
     #init_participant()
     
     st.toast(f'Updated project folder {sel_project}')
-    st.session_state.project = sel_project
-    st.session_state.project_selected_explicitly = True
+    st.session_state.user_sel['project'] = sel_project
+    st.session_state.user_sel['project_selected_explicitly'] = True
     st.session_state.paths['project'] = p_prj
 
     st.session_state.paths['curr_data'] = st.session_state.paths['prj_dir']

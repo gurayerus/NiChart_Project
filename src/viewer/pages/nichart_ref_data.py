@@ -29,7 +29,7 @@ utilpg.set_global_style()
 
 ###############################
 # Set session state variables for the reference data workflow
-st.session_state.workflow = 'ref_data'
+st.session_state.user_sel['workflow'] = 'ref_data'
 
 st.session_state.paths['curr_data'] = st.session_state.paths['sample_data'] 
 
