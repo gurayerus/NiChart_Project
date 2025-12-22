@@ -8,7 +8,6 @@ import utils.utils_misc as utilmisc
 import utils.utils_pages as utilpg
 import utils.utils_processes as utilprc
 import utils.utils_session as utilses
-import utils.utils_io as utilio
 import utils.utils_data_view as utildv
 from utils.utils_styles import inject_global_css 
 import utils.utils_navig as utilnav
@@ -33,7 +32,7 @@ utilpg.set_global_style()
 st.session_state.user_sel['workflow'] = 'single_subject'
 st.session_state.user_sel['subject_type'] = 'single'
 
-st.session_state.paths['curr_data'] = st.session_state.paths['prj_dir'] 
+st.session_state.paths['curr_data'] = st.session_state.paths['project'] 
 
 ###############################
 

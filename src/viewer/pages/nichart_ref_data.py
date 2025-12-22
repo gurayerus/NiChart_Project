@@ -8,7 +8,6 @@ import utils.utils_misc as utilmisc
 import utils.utils_pages as utilpg
 import utils.utils_processes as utilprc
 import utils.utils_session as utilses
-import utils.utils_io as utilio
 import utils.utils_data_view as utildv
 from utils.utils_styles import inject_global_css 
 
@@ -54,7 +53,7 @@ if sel_opt == '':
     st.switch_page("pages/nichart_results.py")
 
 # Show session state vars
-if st.session_state.system_vars['mode'] == 'debug':
+if st.session_state.app_state['mode'] == 'debug':
     utilses.disp_session_state()
 
 

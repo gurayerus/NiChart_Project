@@ -106,7 +106,7 @@ def select_pipeline(enabled_pnames: List) -> Optional[str]:
     show_enabled_only = st.checkbox("Show only pipelines which match my available data", value=True)
     sac.divider(key='_p2_div1')
 
-    pipelines = st.session_state.pipelines
+    pipelines = st.session_state.pipelines['desc']
     pnames = pipelines.Name.tolist()
 
     
@@ -132,8 +132,8 @@ def select_pipeline(enabled_pnames: List) -> Optional[str]:
     row = pipelines.loc[pipelines["Name"] == sel_opt, "Label"]
     sel_label = row.iloc[0] if not row.empty else ''
     show_description(sel_opt)
-    st.session_state.sel_pipeline_name = sel_opt
-    st.session_state.sel_pipeline_label = sel_label
+    st.session_state.user_sel['pipeline_name'] = sel_opt
+    st.session_state.user_sel['pipeline_label'] = sel_label
     #st.info(f"DEBUG: sel_opt {sel_opt}")
     #st.info(f"DEBUG: sel_label {sel_label}")
 
@@ -145,7 +145,7 @@ def pipeline_runner_menu(enabled_pnames: List, sel: Optional[str] = None) -> Non
     if not sel:
         st.info("Select a pipeline on the left, then look here to run it.")
         return
-    sel_method = st.session_state.sel_pipeline_label
+    sel_method = st.session_state.user_sel['pipeline_label']
     sel_name = utiltl.get_pipeline_name_by_label(sel_method)
     st.success(f'Selected pipeline: {sel_name}')
     harmonize = False
@@ -191,7 +191,7 @@ def pipeline_runner_menu(enabled_pnames: List, sel: Optional[str] = None) -> Non
 
         log = stlogbox.StreamlitJobLogger(log_committed_box, log_live_box)
         execution_mode = 'local'
-        if st.session_state.has_cloud_session:
+        if st.session_state.app_state['has_cloud_session']:
             execution_mode = 'cloud'
         local_path_remapping = {}
         data_dir_locally = st.session_state.paths["out_dir"]
@@ -249,10 +249,10 @@ def pipeline_menu() -> None:
     #cols = st.columns([10,1,10])
     cols = st.columns(2)
     out_dir = os.path.join(
-        st.session_state.paths['out_dir'], st.session_state['prj_name']
+        st.session_state.paths['out_dir'], st.session_state.user_sel['prj_name']
     )
 
-    pipelines = st.session_state.pipelines
+    pipelines = st.session_state.pipelines['desc']
     pnames = pipelines.Name.tolist()
 
     enabled_pnames = []

@@ -78,7 +78,7 @@ def update_participant_csv() -> None:
     df = pd.DataFrame(
         {'MRID':[mrid], 'Age':[age], 'Sex':[sex]}
     )
-    odir = os.path.join(st.session_state.paths['prj_dir'], 'participants')
+    odir = os.path.join(st.session_state.paths['project'], 'participants')
     ofile = os.path.join(odir, 'participants.csv')
     os.makedirs(odir, exist_ok=True)
     df.to_csv(ofile, index=False)
@@ -88,7 +88,7 @@ def consolidate_user_csv(fname: Optional[str]) -> bool:
     
     if fname is None:
         return False
-    in_dir = os.path.join(st.session_state.paths['prj_dir'], 'user_upload')
+    in_dir = os.path.join(st.session_state.paths['project'], 'user_upload')
     in_fpath = os.path.join(in_dir, fname)
 
     with st.form(key='_form_csv_info'):
@@ -102,7 +102,7 @@ def consolidate_user_csv(fname: Optional[str]) -> bool:
     if flag_submit:
         if sel_opt == 'Yes':
             # Move csv to consolidated path
-            out_dir = os.path.join(st.session_state.paths['prj_dir'], 'participants')
+            out_dir = os.path.join(st.session_state.paths['project'], 'participants')
             out_fpath = os.path.join(out_dir, 'participants.csv')
             os.makedirs(out_dir, exist_ok=True)
             if os.path.exists(out_fpath):
@@ -111,7 +111,7 @@ def consolidate_user_csv(fname: Optional[str]) -> bool:
             
         else:
             # Move csv to consolidated path
-            out_dir = os.path.join(st.session_state.paths['prj_dir'], 'user_data')
+            out_dir = os.path.join(st.session_state.paths['project'], 'user_data')
             out_fpath = os.path.join(out_dir, fname)
             os.makedirs(out_dir, exist_ok=True)
             if os.path.exists(out_fpath):
@@ -132,7 +132,7 @@ def consolidate_nifti() -> bool:
     in_fname = st.session_state.user_sel['curr_scan']
     if in_fname is None:
         return False
-    in_dir = os.path.join(st.session_state.paths['prj_dir'], 'user_upload')
+    in_dir = os.path.join(st.session_state.paths['project'], 'user_upload')
     in_fpath = os.path.join(in_dir, in_fname)
 
     logger.debug(f'      Input: {in_fpath}')
@@ -168,7 +168,7 @@ def consolidate_nifti() -> bool:
         st.success('Updated participant info!')
 
         # Move scan to consolidated path
-        out_dir = os.path.join(st.session_state.paths['prj_dir'], mod.lower())
+        out_dir = os.path.join(st.session_state.paths['project'], mod.lower())
         out_fpath = os.path.join(out_dir, mrid + '_' + mod + '.nii.gz')
         os.makedirs(out_dir, exist_ok=True)
         if os.path.exists(out_fpath):
@@ -204,7 +204,7 @@ def consolidate_nifti_multi() -> bool:
     logger.debug(f'    Function: consolidate_nifti')
     
     # Detect common suffix
-    in_dir = os.path.join(st.session_state.paths['prj_dir'], 'user_upload', 'nifti')
+    in_dir = os.path.join(st.session_state.paths['project'], 'user_upload', 'nifti')
     nifti_files = [
         f for f in os.listdir(in_dir) if f.endswith('.nii') or f.endswith('.nii.gz')
     ]
@@ -230,7 +230,7 @@ def consolidate_nifti_multi() -> bool:
         
     if flag_submit:
         # Move scans to consolidated path
-        out_dir = os.path.join(st.session_state.paths['prj_dir'], mod)
+        out_dir = os.path.join(st.session_state.paths['project'], mod)
         os.makedirs(out_dir, exist_ok=True)
         for fname in nifti_files:
             mrid = fname.replace(suffix, '')
@@ -243,7 +243,7 @@ def consolidate_nifti_multi() -> bool:
         
         # Create participants list
         df['MRID'] = df.MRID.str.replace(suffix, '')
-        odir = os.path.join(st.session_state.paths['prj_dir'], 'participants')
+        odir = os.path.join(st.session_state.paths['project'], 'participants')
         ofile = os.path.join(odir, 'participants.csv')
         os.makedirs(odir, exist_ok=True)
         if not os.path.exists(ofile):
@@ -305,7 +305,7 @@ def upload_file_single_subject(in_file: Optional[Any]) -> None:
         time.sleep(3)
         return
     
-    tmp_dir = os.path.join(st.session_state.paths['prj_dir'], 'user_upload')
+    tmp_dir = os.path.join(st.session_state.paths['project'], 'user_upload')
     os.makedirs(tmp_dir, exist_ok=True)
 
     fname = in_file.name
@@ -341,7 +341,7 @@ def upload_file_multi_subject(in_file: Optional[Any]) -> None:
         time.sleep(3)
         return
     
-    tmp_dir = os.path.join(st.session_state.paths['prj_dir'], 'user_upload')
+    tmp_dir = os.path.join(st.session_state.paths['project'], 'user_upload')
     os.makedirs(tmp_dir, exist_ok=True)
 
     fname = in_file.name
@@ -373,7 +373,7 @@ def upload_files_single_subject(in_files: list) -> None:
     if len(in_files) == 0:
         return
     
-    tmp_dir = os.path.join(st.session_state.paths['prj_dir'], 'user_upload')
+    tmp_dir = os.path.join(st.session_state.paths['project'], 'user_upload')
     d_out = os.path.join(tmp_dir, 'dicoms')
     
     os.makedirs(d_out, exist_ok=True)
@@ -397,7 +397,7 @@ def upload_files_multi_subject(in_files: list) -> None:
     if len(in_files) == 0:
         return
     
-    tmp_dir = os.path.join(st.session_state.paths['prj_dir'], 'user_upload')
+    tmp_dir = os.path.join(st.session_state.paths['project'], 'user_upload')
     d_out = os.path.join(tmp_dir, 'nifti')
     
     os.makedirs(d_out, exist_ok=True)
@@ -501,7 +501,7 @@ def panel_project_folder() -> None:
 
         with st.container(horizontal=True, horizontal_alignment="center"):
             if st.button("Delete") and flag_confirm:
-                utilio.clear_folder(st.session_state.paths['prj_dir'])
+                utilio.clear_folder(st.session_state.paths['project'])
                 st.toast(f"Files in project {st.session_state.user_sel['prj_name']} have been successfully deleted.")
                 utilss.update_project(st.session_state.user_sel['prj_name'])
         
@@ -594,7 +594,7 @@ def generate_template_csv() -> pd.DataFrame:
     # Add columns for batch and dx
     df[['Age']] = ''
     df[['Sex']] = ''
-    df[['Batch']] = f'{st.session_state.project}_Batch1'
+    df[['Batch']] = f'{st.session_state.user_sel['prj_name']}_Batch1'
     df[['IsCN']] = 1
     
     
@@ -632,10 +632,10 @@ def panel_upload_multi_subject() -> None:
            )
             
     with st.popover("T1 Scans"):
-        t1_out_dir = os.path.join(st.session_state.paths['prj_dir'], 't1')
+        t1_out_dir = os.path.join(st.session_state.paths['project'], 't1')
         utilio.upload_multiple_files(out_dir=t1_out_dir)
     with st.popover("FLAIR Scans"):
-        fl_out_dir = os.path.join(st.session_state.paths['prj_dir'], 'fl')
+        fl_out_dir = os.path.join(st.session_state.paths['project'], 'fl')
         utilio.upload_multiple_files(out_dir=fl_out_dir)
     #with st.popover("DICOM images"):
     #    pass
@@ -693,7 +693,7 @@ def panel_upload_multi_subject() -> None:
         logger.debug(f'**** sel csv file : {csv_file}')
         if flag_csv_submit == True:
             try:
-                dest_path = os.path.join(st.session_state.paths['prj_dir'], 'participants', 'participants.csv')
+                dest_path = os.path.join(st.session_state.paths['project'], 'participants', 'participants.csv')
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
                 with open(dest_path, 'wb') as f:
                     f.write(csv_file.getbuffer())
@@ -722,7 +722,7 @@ def panel_view_files() -> None:
 
     with st.container(border = None, height = 400):
         tree_items, list_paths = utildv.build_folder_tree(
-            st.session_state.paths['prj_dir'],
+            st.session_state.paths['project'],
             st.session_state.constants['list_out_folders'],
             None,
             3,
@@ -759,6 +759,79 @@ def panel_view_files() -> None:
         if fpath.endswith(('.nii.gz','.nii')):
             view_mri(fpath)
             
+
+def panel_select_project(out_dir: str, curr_project: str) -> Optional[str]:
+    '''
+    Panel for creating/selecting a project name/folder (to keep all data for the current project)
+    '''
+    items = ['Select Existing', 'Create New']
+    if st.session_state.has_cloud_session:
+        items.append('Generate Demo Data')
+    sel_mode = sac.tabs(
+        items=items,
+        size='lg',
+        align='left'
+    )
+    
+    if sel_mode is None:
+        return None
+
+    if sel_mode == 'Generate Demo Data': 
+        st.info("You can import some demonstration data into your projects list by clicking the button below.")
+        if st.button("Generate"):
+            # Copy demo dirs to user folder (TODO: make this less hardcoded)
+            demo_dir_paths = [
+                os.path.join(
+                    st.session_state.paths["root"],
+                    "output_folder",
+                    "NiChart_sMRI_Demo1",
+                ),
+                os.path.join(
+                    st.session_state.paths["root"],
+                    "output_folder",
+                    "NiChart_sMRI_Demo2",
+                ),
+            ]
+            demo_names = []
+            for demo in demo_dir_paths:
+                demo_name = os.path.basename(demo)
+                demo_names.append(demo_name)
+                destination_path = os.path.join(
+                    st.session_state.paths["out_dir"], demo_name
+                )
+                if os.path.exists(destination_path):
+                    shutil.rmtree(destination_path)
+                shutil.copytree(demo, destination_path, dirs_exist_ok=True)
+            st.success(f"NiChart demonstration projects have been added to your projects list: {', '.join(demo_names)} ")
+            return None
+      
+    if sel_mode == 'Create New':
+        sel_project = st.text_input(
+            "Task name:",
+            None,
+            placeholder="My_new_study",
+            label_visibility = 'collapsed'
+        )   
+    if sel_mode == 'Select Existing':
+        list_projects = get_subfolders(out_dir)
+        if len(list_projects) > 0:
+            sel_ind = list_projects.index(curr_project)
+            sel_project = st.selectbox(
+                "Select Existing Project",
+                options = list_projects,
+                index = sel_ind,
+                label_visibility = 'collapsed',
+            )
+    if sel_project is None:
+        return None
+    
+    if st.button("Select"):
+        if sel_project != curr_project:
+            utilss.update_project(sel_project)
+        return sel_project
+    
+    return None
+    
                               
         
 

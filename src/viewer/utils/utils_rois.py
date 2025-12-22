@@ -1,162 +1,70 @@
-from typing import Any
-
+from dataclasses import dataclass, field
+from typing import List, Optional, Dict
 import pandas as pd
-import streamlit as st
-import os
-from typing import Any, Optional
+from pathlib import Path
 
-
-# from stqdm import stqdm
-
-
-@st.cache_data
-def get_list_rois(sel_var: Optional[Any ], roi_dict: dict, derived_dict: dict) -> Any:
+@dataclass(frozen=True)
+class ROI:
+    index: int
+    name: str
+    components: Optional[List[int]] = None
     """
-    Get a list of ROI indices for the selected var
-    """
-    if sel_var is None:
-        return None
-
-    # Convert ROI name to index
-    if sel_var in roi_dict.keys():
-        sel_var = roi_dict[sel_var]
-
-    sel_var = int(sel_var)
-
-    # Get list of derived ROIs
-    if sel_var in derived_dict.keys():
-        list_rois = derived_dict[sel_var]
-    else:
-        if str.isnumeric(sel_var):
-            list_rois = [sel_var]
-        else:
-            list_rois = []
-
-    return list_rois
-
-
-@st.cache_data
-def get_roi_names(csv_rois: str) -> Any:
-    """
-    Get a list of ROI names
-    """
-    # Read list
-    df = pd.read_csv(csv_rois)
-    return df.Name.tolist()
-
-
-def muse_derived_to_dict(in_list: str) -> Any:
-    """
-    Create a dictionary from derived roi list
-    """
-    # Read list
-    df = pd.read_csv(in_list, header=None)
-
-
-    dict_derived = {
-        row[0]: [int(x) for x in row[2:] if pd.notna(x)] for _, row in df.iterrows()
-    }
-
-    ## Create dict of roi indices and derived indices
-    #dict_derived = {}
-    #for i, tmp_ind in enumerate(df[0].values):
-        #df_tmp = df[df[] == tmp_ind].drop([0, 1], axis=1)
-        #sel_vals = df_tmp.T.dropna().astype(int).values.flatten()
-        #dict_derived[str(tmp_ind)] = list(sel_vals)
-
-    return dict_derived
-
-def muse_derived_to_df(in_list: list) -> Any:
-    """
-    Create a df from derived roi list
-    """
-    # Read list
-    df = pd.read_csv(in_list, header=None)
-
-    # Rename first two columns
-    df = df.rename(columns={0: 'Index', 1: 'Name'})
-
-    # Create a new column 'List' with the remaining columns as a list
-    df['List'] = df.iloc[:, 2:].apply(lambda row: row.dropna().astype(int).tolist(), axis=1)
-
-    # Keep only the desired columns
-    df = df[['Index', 'Name', 'List']]
-    df.Index = df.Index.astype(str)
-
-    return df
-
-def muse_roi_groups_to_df(in_list: list) -> Any:
-    """
-    Create a df from roi groups list
-    """
-    # Read list
-    df = pd.read_csv(in_list, header=None)
-
-    # Rename first two columns
-    df = df.rename(columns={0: 'Name'})
-
-    # Create a new column 'List' with the remaining columns as a list
-    df['List'] = df.iloc[:, 1:].apply(lambda row: row.dropna().astype(int).tolist(), axis=1)
-
-    # Keep only the desired columns
-    df = df[['Name', 'List']]
-
-    return df
-
-
-def muse_get_derived(sel_roi: str, in_list: list) -> Any:
-    """
-    Create a list of derived roi indices for the selected roi
+        [5, 8, 10]  → derived ROI composed of other ROI indices
     """
 
-    # Read list
-    df = pd.read_csv(in_list, header=None)
+    @property
+    def is_derived(self) -> bool:
+        if not self.components:
+            return False
+        return len(self.components)>1
 
-    # Keep only selected ROI
-    df = df[df[0].astype(str) == sel_roi]
+@dataclass
+class RoiAtlas:
+    name: str
+    rois: Dict[int, ROI]                  # index → ROI
+    name_to_index: Dict[str, int]          # name → index
 
-    if df.shape[0] == 0:
-        return []
+    def get_by_index(self, index: int) -> ROI:
+        try:
+            return self.rois[index]
+        except:
+            return None
 
-    # Get list of derived rois
-    sel_vals = df.drop([0, 1], axis=1).T.dropna().astype(int).values.flatten()
+    def get_by_name(self, name: str) -> ROI:
+        try:
+            return self.rois[self.name_to_index[name]]
+        except:
+            return None
 
-    return sel_vals
+    def is_derived(self, index: int) -> bool:
+        try:
+            return self.rois[index].is_derived
+        except:
+            return False
 
-def read_muse_dicts() -> Any:
+def load_muse_atlas(roi_list_csv: Path, derived_csv: Path) -> RoiAtlas:
     '''
-    Function to read muse dictionaries and save in session state
+    Read ROI lists for MUSE to RoiAtlas object
     '''
-    f_muse = os.path.join(
-        st.session_state.paths['resources'], 'dicts', 'muse', 'muse_dict.csv'
+    # --- Load base ROI list ---
+    df_rois = pd.read_csv(roi_list_csv)
+    rois: Dict[int, ROI] = {}
+    name_to_index: Dict[str, int] = {}
+    for _, row in df_rois.iterrows():
+        idx = int(row["Index"])
+        name = str(row["Name"])
+        rois[idx] = ROI(index=idx, name=name)
+        name_to_index[name] = idx
+
+    # --- Load derived ROIs ---
+    df_derived = pd.read_csv(derived_csv)
+    for _, row in df_derived.iterrows():
+        parent_idx = int(row[0])
+        components = [int(x) for x in row[2:] if pd.notna(x)]
+        rois[parent_idx] = ROI(index=parent_idx, name=rois[parent_idx].name, components=components)
+
+    return RoiAtlas(
+        name="MUSE",
+        rois=rois,
+        name_to_index=name_to_index,
     )
-    f_muse_derived = os.path.join(
-        st.session_state.paths['resources'], 'dicts', 'muse', 'muse_mapping_derived.csv'
-    )
-
-    # Read muse roi list to dictionaries (ind->name, name->ind)
-    df_muse = pd.read_csv(f_muse)
-
-    # Remove duplicate entries
-    d1 = dict(zip(df_muse["Index"].astype(str), df_muse["Name"].astype(str)))
-    d2 = dict(zip(df_muse["Name"].astype(str), df_muse["Index"].astype(str)))
-
-    # Read derived roi lists to dict
-    d3 = muse_derived_to_dict(f_muse_derived)
-
-    out_dicts = {
-        'ind_to_name' : d1,
-        'name_to_ind' : d2,
-        'derived' : d3
-    }
-
-    return out_dicts
-
-
-    ## FIXME
-    #muse['dict_roi'] = dict1
-    #muse['dict_roi_inv'] = dict2
-    #muse['dict_derived'] = dict3
-    #muse['df_derived'] = df_derived
-    #muse['df_groups'] = df_groups
-

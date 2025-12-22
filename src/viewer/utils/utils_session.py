@@ -7,17 +7,17 @@ import yaml
 import pandas as pd
 import streamlit as st
 import utils.utils_rois as utilroi
-import utils.utils_cmaps as utilcmap
 import utils.utils_toolloader as utiltl
 import os
 from PIL import Image
 import streamlit_antd_components as sac
 
-#################################################
-## Functions to update session info for the cloud
+# --- Functions to update session info for the cloud ---
 
-# Function to parse AWS login (if available)
 def process_session_token() -> Any:
+    '''
+    Function to parse AWS login (if available)
+    '''
     # headers = _get_websocket_headers()
     headers = st.context.headers
     if not headers or "X-Amzn-Oidc-Data" not in headers:
@@ -44,78 +44,44 @@ def process_session_user_email() -> Any:
         return "NO_EMAIL_FOUND"
     return decoded_token['email']
 
-#################################################
-## Functions to update session variables
-
-def update_project(sel_project: Optional[str]) -> None:
-    """
-    Updates when project changes
-    """
-    if sel_project is None:
-        return
-
-    if sel_project == st.session_state.user_sel['prj_name']:
-        return
-
-    # Create project dir
-    p_prj = os.path.join(
-        st.session_state.paths['out_dir'], sel_project
-    )
-
-    try:
-        if not os.path.exists(p_prj):
-            os.makedirs(p_prj)
-            st.toast(f'Created folder {sel_project}')
-            time.sleep(1)
-    except:
-        st.error(f'Could not create project folder: {p_prj}')
-        return
-    
-    st.session_state.user_sel['prj_name'] = sel_project
-    st.session_state.user_sel['project_selected_explicitly'] = True
-    st.session_state.paths['prj_dir'] = p_prj
-
-    st.toast(f'Updated project folder {sel_project}')
-
-#################################################
-## Misc utility functions
+# --- Misc utility functions ---
 
 def disp_session_state() -> None:
     '''
     Show session state variables
     '''
-    if '_debug_flag_show' not in st.session_state:
-        st.session_state['_debug_flag_show'] = st.session_state.user_sel['flag_show_session']
+    with st.sidebar:
+        if '_debug_flag_show' not in st.session_state:
+            st.session_state['_debug_flag_show'] = st.session_state.debug['flag_show_session']
 
-    def update_val() -> None:
-        st.session_state.user_sel['flag_show_session'] = st.session_state['_debug_flag_show']
+        def update_val() -> None:
+            st.session_state.debug['flag_show_session'] = st.session_state['_debug_flag_show']
 
-    sac.divider(label='Debug', icon = 'gear',  align='center', color='gray')
-    st.checkbox(
-        'Show Session State',
-        key = '_debug_flag_show',
-        on_change = update_val
-    )
+        sac.divider(label='Debug', icon = 'gear',  align='center', color='gray')
+        st.checkbox(
+            'Show Session State',
+            key = '_debug_flag_show',
+            on_change = update_val
+        )
 
-    if st.session_state.user_sel['flag_show_session']:
-        with st.container(border=True):
-            st.markdown('##### Session State:')
-            list_items = sorted([x for x in st.session_state.keys() if not str(x).startswith('_')])
-            #list_items = sorted([x for x in st.session_state.keys() if x.startswith('_')])
-            st.pills(
-                "Select Session State Variable(s) to View",
-                list_items,
-                selection_mode="multi",
-                key='_debug_sel_vars',
-                # default=st.session_state['debug']['sel_vars'],
-                label_visibility="collapsed",
-            )
-            st.session_state.user_sel['sel_session_vars'] = st.session_state['_debug_sel_vars']
+        if st.session_state.debug['flag_show_session']:
+            with st.container(border=True):
+                st.markdown('##### Session State:')
+                list_items = sorted([x for x in st.session_state.keys() if not str(x).startswith('_')])
+                #list_items = sorted([x for x in st.session_state.keys() if x.startswith('_')])
+                st.pills(
+                    "Select Session State Variable(s) to View",
+                    list_items,
+                    selection_mode="multi",
+                    key='_debug_sel_vars',
+                    # default=st.session_state['debug']['sel_session_vars'],
+                    label_visibility="collapsed",
+                )
+                st.session_state.debug['sel_session_vars'] = st.session_state['_debug_sel_vars']
 
-            for sel_var in st.session_state.user_sel['sel_session_vars']:
-                st.markdown('➤ ' + sel_var + ':')
-                st.write(st.session_state[sel_var])
-    #print('FIXME: This is bypassed for now ...')
+                for sel_var in st.session_state.debug['sel_session_vars']:
+                    st.markdown('➤ ' + sel_var + ':')
+                    st.write(st.session_state[sel_var])
 
 def copy_test_folders() -> None:
     '''
@@ -144,19 +110,50 @@ def copy_test_folders() -> None:
                 shutil.rmtree(destination_path)
             shutil.copytree(demo, destination_path, dirs_exist_ok=True)
 
-def reset_dicoms() -> None:
-    '''
-    Reset dicom variables
-    '''
-    st.session_state.dicoms = {
-        'list_series': None,
-        'sel_serie': None,
-        'num_dicom_scans': 0,
-        'df_dicoms': None
-    }
+# --- Functions to update session variables ---
 
-#################################################
-## Functions to initialize session variables
+def update_project(sel_project: Optional[str]) -> None:
+    """
+    Updates when project changes
+    """
+    if sel_project is None:
+        return
+
+    if sel_project == st.session_state.user_sel['prj_name']:
+        return
+
+    # Create project dir
+    p_prj = os.path.join(
+        st.session_state.paths['out_dir'], sel_project
+    )
+
+    try:
+        if not os.path.exists(p_prj):
+            os.makedirs(p_prj)
+            st.toast(f'Created folder {sel_project}')
+            time.sleep(1)
+    except:
+        st.error(f'Could not create project folder: {p_prj}')
+        return
+    
+    st.session_state.user_sel['prj_name'] = sel_project
+    st.session_state.user_sel['project_selected_explicitly'] = True
+    st.session_state.paths['project'] = p_prj
+
+    st.toast(f'Updated project folder {sel_project}')
+
+# --- Functions to initialize session variables ---
+
+def init_debug_vars() -> None:
+    '''
+    Set debug variables
+    '''
+    flag_show_session = False
+    sel_session_vars = []
+    st.session_state.debug = {
+        'flag_show_session': flag_show_session,
+        'sel_session_vars': sel_session_vars
+    }
 
 def init_paths() -> None:
     '''
@@ -188,12 +185,6 @@ def init_paths() -> None:
     if not os.path.exists(p_prj):
         os.makedirs(p_prj)
 
-    st.session_state.dicts = {
-        "muse_derived": os.path.join(p_resources, "MUSE", "list_MUSE_mapping_derived.csv"),
-        "muse_all": os.path.join(p_resources, "MUSE", "list_MUSE_all.csv"),
-        "muse_sel": os.path.join(p_resources, "MUSE", "list_MUSE_primary.csv"),
-    }
-
     st.session_state.paths = {
         "root": p_root,
         "init": p_init,
@@ -204,7 +195,6 @@ def init_paths() -> None:
         "file_search_dir": "",
         "out_dir": p_out,
         "host_out_dir": None,
-        "prj_dir": p_prj,
         "project": p_prj,
         'target': None,
         "curr_data": None
@@ -216,10 +206,6 @@ def init_paths() -> None:
     host_out_dir = os.getenv("NICHART_HOST_DATA_DIR", None)
     if host_out_dir is not None:
         st.session_state.paths['host_out_dir'] = host_out_dir
-    
-    ## FIXME : set init folder to test folder outside repo
-    st.session_state.paths["init"] = os.path.join(st.session_state.paths["root"], "test_data")
-    st.session_state.paths["file_search_dir"] = st.session_state.paths["init"]
 
 def init_refdata() -> None:
     '''
@@ -246,9 +232,9 @@ def init_dicts() -> None:
     '''
     Initialize data dictionaries (atlas roi def.s etc.)
     '''
-    ## Dictionary of variable groups
+    # -- Variable groups ---
     f_vars = os.path.join(
-        st.session_state.paths['resources'], 'lists', 'dict_var_groups.yaml'
+        st.session_state.paths['resources'], 'dicts', 'dict_var_groups.yaml'
     )
 
     with open(f_vars, 'r') as file:
@@ -267,40 +253,17 @@ def init_dicts() -> None:
         })
     df_vars = pd.DataFrame(rows)
 
-    # MUSE dictionaries
-    muse = utilroi.read_muse_dicts()
+    # --- MUSE ROIs ---
+    f_muse = os.path.join(
+        st.session_state.paths['resources'], 'dicts', 'muse', 'muse_list_rois.csv'
+    )
+    f_muse_derived = os.path.join(
+        st.session_state.paths['resources'], 'dicts', 'muse', 'muse_mapping_derived.csv'
+    )
+    muse = utilroi.load_muse_atlas(f_muse, f_muse_derived)
 
-    # Paths to roi lists
-    muse: dict[str, Any]  = {
-        'path': os.path.join(st.session_state.paths['resources'], 'lists', 'MUSE'),
-        'list_rois' : 'MUSE_listROIs.csv',
-        'list_derived' : 'MUSE_mapping_derivedROIs.csv',
-        'list_groups' : 'MUSE_ROI_Groups_v1.csv',
-    }
-        
-    # Read roi lists to dictionaries
-    df_tmp = pd.read_csv(
-        os.path.join(muse['path'], muse['list_rois']),
-    )
-    dict1 = dict(zip(df_tmp["Index"].astype(str), df_tmp["Name"].astype(str)))
-    dict2 = dict(zip(df_tmp["Name"].astype(str), df_tmp["Index"].astype(str)))
-    dict3 = utilroi.muse_derived_to_dict(
-        os.path.join(muse['path'], muse['list_derived'])
-    )
-    df_derived = utilroi.muse_derived_to_df(
-        os.path.join(muse['path'], muse['list_derived'])
-    )
-    df_groups = utilroi.muse_roi_groups_to_df(
-        os.path.join(muse['path'], muse['list_groups'])
-    )
-    muse['dict_roi'] = dict1
-    muse['dict_roi_inv'] = dict2
-    muse['dict_derived'] = dict3
-    muse['df_derived'] = df_derived
-    muse['df_groups'] = df_groups
-    
     st.session_state.dicts = {
-        'df_var_groups': df_vars,
+        'var_groups': df_vars,
         'muse': muse,
     }
 
@@ -399,6 +362,7 @@ def init_session_state() -> None:
         init_constants()
         init_app_state()
         init_user_sel()
+        init_debug_vars()
         init_paths()
         init_dicts()
         init_pipelines()
