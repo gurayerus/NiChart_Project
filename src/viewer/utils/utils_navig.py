@@ -55,7 +55,14 @@ def main_navig(
                 st.switch_page(page_back)
 
         if page_fwd is not None:
-            if st.button('', icon=':material/arrow_forward:', help = txt_fwd):
+            if page_fwd == 'pages/nichart_info.py':
+                MODULES_URL = "http://localhost:8000"
+                st.markdown(
+                    f'<a href="{MODULES_URL}" target="_blank">'
+                    '🚀 Explore NiChart Modules</a>',
+                    unsafe_allow_html=True
+                )
+            else:
                 st.switch_page(page_fwd)
 
         if func_settings is not None:
